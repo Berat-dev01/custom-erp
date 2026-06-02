@@ -121,6 +121,9 @@ return [
             'erp.projects.update',
             'erp.projects.delete',
 
+            'erp.manufacturing.view',
+            'erp.manufacturing.manage',
+
             'erp.assets.view',
             'erp.assets.create',
             'erp.assets.update',

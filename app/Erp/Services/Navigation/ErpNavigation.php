@@ -126,6 +126,14 @@ class ErpNavigation
                 ],
             ],
             [
+                'label' => __('Üretim'),
+                'icon'  => 'factory',
+                'items' => [
+                    ['label' => __('Ürün Ağaçları'), 'route' => 'erp.boms.index',         'permission' => 'erp.manufacturing.view'],
+                    ['label' => __('İş Emirleri'),   'route' => 'erp.work-orders.index',  'permission' => 'erp.manufacturing.view'],
+                ],
+            ],
+            [
                 'label' => __('Sabit Kıymetler'),
                 'icon'  => 'building-2',
                 'items' => [

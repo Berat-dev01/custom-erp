@@ -2,7 +2,9 @@
 
 use App\Erp\Http\Controllers\Admin\AccountsController;
 use App\Erp\Http\Controllers\Admin\ApiTokensController;
+use App\Erp\Http\Controllers\Admin\BomsController;
 use App\Erp\Http\Controllers\Admin\CurrenciesController;
+use App\Erp\Http\Controllers\Admin\WorkOrdersController;
 use App\Erp\Http\Controllers\Admin\AssetsController;
 use App\Erp\Http\Controllers\Admin\AttendanceController;
 use App\Erp\Http\Controllers\Admin\BankAccountsController;
@@ -99,6 +101,13 @@ Route::middleware(config('erp.routes.middleware', ['web']))
                 // Assets Modülü
                 Route::resource('assets', AssetsController::class);
                 Route::post('assets/{asset}/depreciate', [AssetsController::class, 'depreciate'])->name('assets.depreciate');
+
+                // Üretim Modülü
+                Route::resource('boms', BomsController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+                Route::resource('work-orders', WorkOrdersController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+                Route::patch('work-orders/{work_order}/release',  [WorkOrdersController::class, 'release'])->name('work-orders.release');
+                Route::patch('work-orders/{work_order}/complete', [WorkOrdersController::class, 'complete'])->name('work-orders.complete');
+                Route::patch('work-orders/{work_order}/cancel',   [WorkOrdersController::class, 'cancel'])->name('work-orders.cancel');
 
                 // Kasa & Banka Modülü
                 Route::resource('bank-accounts', BankAccountsController::class)->only(['index', 'create', 'store', 'show']);
