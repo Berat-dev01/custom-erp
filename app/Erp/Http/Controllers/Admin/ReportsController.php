@@ -7,6 +7,7 @@ use App\Erp\Models\Employee;
 use App\Erp\Models\Invoice;
 use App\Erp\Models\Product;
 use App\Erp\Models\StockLevel;
+use App\Erp\Services\Accounting\AccountingService;
 use App\Erp\Services\Finance\ExpenseService;
 use App\Erp\Services\Finance\InvoiceService;
 use Illuminate\Http\Request;
@@ -20,6 +21,7 @@ class ReportsController extends Controller
     public function __construct(
         private InvoiceService $invoiceService,
         private ExpenseService $expenseService,
+        private AccountingService $accountingService,
     ) {}
 
     public function index(Request $request)
@@ -161,5 +163,49 @@ class ReportsController extends Controller
             'bucket_totals' => $bucketTotals,
             'grand_total'   => $outstanding->sum('remaining'),
         ]);
+    }
+
+    public function trialBalance(Request $request)
+    {
+        Gate::authorize('erp.reports.view');
+
+        $from = Carbon::parse($request->get('date_from', now()->startOfYear()))->startOfDay();
+        $to   = Carbon::parse($request->get('date_to',   now()))->endOfDay();
+
+        $rows = $this->accountingService->trialBalance($from, $to);
+
+        return view('erp::admin.reports.trial-balance', compact('rows', 'from', 'to'));
+    }
+
+    public function balanceSheet(Request $request)
+    {
+        Gate::authorize('erp.reports.view');
+
+        $date = Carbon::parse($request->get('date', now()));
+        $data = $this->accountingService->balanceSheet($date);
+
+        return view('erp::admin.reports.balance-sheet', compact('data', 'date'));
+    }
+
+    public function incomeStatement(Request $request)
+    {
+        Gate::authorize('erp.reports.view');
+
+        $from = Carbon::parse($request->get('date_from', now()->startOfYear()));
+        $to   = Carbon::parse($request->get('date_to',   now()));
+        $data = $this->accountingService->incomeStatement($from, $to);
+
+        return view('erp::admin.reports.income-statement', compact('data', 'from', 'to'));
+    }
+
+    public function taxReport(Request $request)
+    {
+        Gate::authorize('erp.reports.view');
+
+        $year  = (int) $request->get('year',  now()->year);
+        $month = (int) $request->get('month', now()->month);
+        $data  = $this->accountingService->vatReport($year, $month);
+
+        return view('erp::admin.reports.tax-report', compact('data', 'year', 'month'));
     }
 }

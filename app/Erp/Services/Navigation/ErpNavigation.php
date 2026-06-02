@@ -131,6 +131,18 @@ class ErpNavigation
                 ],
             ],
             [
+                'label' => __('Muhasebe'),
+                'icon'  => 'book-open',
+                'items' => [
+                    ['label' => __('Hesap Planı'),     'route' => 'erp.accounts.index',        'permission' => 'erp.accounts.view'],
+                    ['label' => __('Yevmiye Fişleri'), 'route' => 'erp.journal-entries.index', 'permission' => 'erp.journal_entries.view'],
+                    ['label' => __('Mizan'),           'route' => 'erp.reports.trial-balance', 'permission' => 'erp.reports.view'],
+                    ['label' => __('Bilanço'),         'route' => 'erp.reports.balance-sheet', 'permission' => 'erp.reports.view'],
+                    ['label' => __('Gelir Tablosu'),   'route' => 'erp.reports.income-statement','permission' => 'erp.reports.view'],
+                    ['label' => __('KDV Raporu'),      'route' => 'erp.reports.tax-report',    'permission' => 'erp.reports.view'],
+                ],
+            ],
+            [
                 'label' => __('Raporlar'),
                 'icon'  => 'bar-chart-2',
                 'items' => [

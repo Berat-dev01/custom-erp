@@ -75,6 +75,10 @@ class PurchaseOrderService
                 'status'        => $newStatus,
                 'received_date' => $newStatus === 'received' ? Carbon::today() : null,
             ]);
+
+            if ($newStatus === 'received') {
+                app(\App\Erp\Services\Accounting\AccountingService::class)->postPurchaseInvoice($po);
+            }
         });
     }
 

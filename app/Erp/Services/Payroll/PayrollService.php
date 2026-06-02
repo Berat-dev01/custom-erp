@@ -117,6 +117,8 @@ class PayrollService
                 'status'   => 'paid',
                 'pay_date' => $payDate,
             ]);
+
+            app(\App\Erp\Services\Accounting\AccountingService::class)->postPayroll($run->fresh());
         });
     }
 

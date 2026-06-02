@@ -1,7 +1,9 @@
 <?php
 
+use App\Erp\Http\Controllers\Admin\AccountsController;
 use App\Erp\Http\Controllers\Admin\ApiTokensController;
 use App\Erp\Http\Controllers\Admin\AssetsController;
+use App\Erp\Http\Controllers\Admin\JournalEntriesController;
 use App\Erp\Http\Controllers\Admin\CustomersController;
 use App\Erp\Http\Controllers\Admin\DashboardController;
 use App\Erp\Http\Controllers\Admin\ReportsController;
@@ -82,6 +84,16 @@ Route::middleware(config('erp.routes.middleware', ['web']))
                 // Assets Modülü
                 Route::resource('assets', AssetsController::class);
                 Route::post('assets/{asset}/depreciate', [AssetsController::class, 'depreciate'])->name('assets.depreciate');
+
+                // Muhasebe Modülü
+                Route::resource('accounts', AccountsController::class)->only(['index', 'show']);
+                Route::resource('journal-entries', JournalEntriesController::class)->only(['index', 'create', 'store', 'show']);
+
+                // Muhasebe Raporları
+                Route::get('reports/trial-balance',    [ReportsController::class, 'trialBalance'])->name('reports.trial-balance');
+                Route::get('reports/balance-sheet',    [ReportsController::class, 'balanceSheet'])->name('reports.balance-sheet');
+                Route::get('reports/income-statement', [ReportsController::class, 'incomeStatement'])->name('reports.income-statement');
+                Route::get('reports/tax-report',       [ReportsController::class, 'taxReport'])->name('reports.tax-report');
 
                 // API Token Yönetimi
                 Route::get('api-tokens',              [ApiTokensController::class, 'index'])->name('api-tokens.index');

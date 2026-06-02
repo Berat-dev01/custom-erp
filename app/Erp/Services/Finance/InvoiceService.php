@@ -51,6 +51,9 @@ class InvoiceService
                 'status'      => $status,
             ]);
 
+            app(\App\Erp\Services\Accounting\AccountingService::class)
+                ->postPaymentReceived($payment->load('invoice'));
+
             return $payment;
         });
     }

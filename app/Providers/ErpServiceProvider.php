@@ -66,6 +66,7 @@ class ErpServiceProvider extends ServiceProvider
         $this->app->singleton(SalesOrderService::class);
         $this->app->singleton(PayrollService::class);
         $this->app->singleton(DepreciationService::class);
+        $this->app->singleton(\App\Erp\Services\Accounting\AccountingService::class);
     }
 
     public function boot(): void
@@ -84,7 +85,12 @@ class ErpServiceProvider extends ServiceProvider
             'erp_customer'       => Customer::class,
             'erp_sales_order'    => SalesOrder::class,
             'erp_project'        => Project::class,
-            'erp_asset'          => Asset::class,
+            'erp_asset'              => Asset::class,
+            'erp_account'            => \App\Erp\Models\Account::class,
+            'erp_journal_entry'      => \App\Erp\Models\JournalEntry::class,
+            'erp_depreciation_entry' => \App\Erp\Models\DepreciationEntry::class,
+            'erp_payroll_run'        => \App\Erp\Models\PayrollRun::class,
+            'erp_payment'            => \App\Erp\Models\Payment::class,
         ]);
 
         $this->loadViewsFrom(resource_path('views/erp'), 'erp');

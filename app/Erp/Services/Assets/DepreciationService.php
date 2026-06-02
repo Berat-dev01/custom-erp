@@ -71,6 +71,8 @@ class DepreciationService
 
             $asset->update(['current_value' => $bookValueAfter]);
 
+            app(\App\Erp\Services\Accounting\AccountingService::class)->postDepreciation($entry->load('asset'));
+
             return $entry;
         });
     }

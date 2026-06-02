@@ -116,6 +116,10 @@ return [
             'erp.assets.update',
             'erp.assets.delete',
 
+            'erp.accounts.view',
+            'erp.accounts.create',
+            'erp.journal_entries.view',
+            'erp.journal_entries.create',
             'erp.reports.view',
             'erp.api.manage',
             'erp.settings.manage',
