@@ -3,6 +3,7 @@
 use App\Erp\Http\Controllers\Admin\AccountsController;
 use App\Erp\Http\Controllers\Admin\ApiTokensController;
 use App\Erp\Http\Controllers\Admin\BomsController;
+use App\Erp\Http\Controllers\Admin\ExportController;
 use App\Erp\Http\Controllers\Admin\CurrenciesController;
 use App\Erp\Http\Controllers\Admin\RolesController;
 use App\Erp\Http\Controllers\Admin\WorkOrdersController;
@@ -145,6 +146,14 @@ Route::middleware(config('erp.routes.middleware', ['web']))
                 Route::get('api-tokens',              [ApiTokensController::class, 'index'])->name('api-tokens.index');
                 Route::post('api-tokens',             [ApiTokensController::class, 'store'])->name('api-tokens.store');
                 Route::delete('api-tokens/{apiToken}',[ApiTokensController::class, 'destroy'])->name('api-tokens.destroy');
+
+                // Excel Export
+                Route::get('export/employees',           [ExportController::class, 'employees'])->name('export.employees');
+                Route::get('export/products',            [ExportController::class, 'products'])->name('export.products');
+                Route::get('export/invoices',            [ExportController::class, 'invoices'])->name('export.invoices');
+                Route::get('export/sales-orders',        [ExportController::class, 'salesOrders'])->name('export.sales-orders');
+                Route::get('export/trial-balance',       [ExportController::class, 'trialBalance'])->name('export.trial-balance');
+                Route::get('export/payroll/{payrollRun}',[ExportController::class, 'payrollSummary'])->name('export.payroll');
 
                 // Raporlar Modülü
                 Route::get('reports',           [ReportsController::class, 'index'])->name('reports.index');
