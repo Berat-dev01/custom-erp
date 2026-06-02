@@ -80,7 +80,8 @@ Route::middleware(config('erp.routes.middleware', ['web']))
 
                 // Payroll Modülü
                 Route::resource('payroll-runs', PayrollRunsController::class)->only(['index', 'create', 'store', 'show']);
-                Route::post('payroll-runs/{payroll_run}/approve', [PayrollRunsController::class, 'approve'])->name('payroll-runs.approve');
+                Route::post('payroll-runs/{payroll_run}/approve',       [PayrollRunsController::class, 'approve'])->name('payroll-runs.approve');
+                Route::get('payroll-runs/{payroll_run}/sgk-bildirgesi', [PayrollRunsController::class, 'exportSgkBildirgesi'])->name('payroll-runs.sgk-bildirgesi');
                 Route::get('employees/{employee}/salary/create', [PayrollRunsController::class, 'salaryCreate'])->name('employees.salary.create');
                 Route::post('employees/{employee}/salary',        [PayrollRunsController::class, 'salaryStore'])->name('employees.salary.store');
                 Route::get('payslips/{payslip}',     [PayslipsController::class, 'show'])->name('payslips.show');

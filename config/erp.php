@@ -20,6 +20,16 @@ return [
         'rate_limit_per_minute' => (int) env('ERP_AI_RATE_LIMIT_PER_MINUTE', 10),
     ],
 
+    'efatura' => [
+        'enabled'   => env('ERP_EFATURA_ENABLED', false),
+        'driver'    => env('ERP_EFATURA_DRIVER', 'null'),
+        'api_url'   => env('ERP_EFATURA_API_URL', ''),
+        'username'  => env('ERP_EFATURA_USERNAME', ''),
+        'password'  => env('ERP_EFATURA_PASSWORD', ''),
+        'vkn'       => env('ERP_EFATURA_VKN', ''),
+        'test_mode' => env('ERP_EFATURA_TEST', true),
+    ],
+
     'api' => [
         'rate_limit_per_minute' => (int) env('ERP_API_RATE_LIMIT_PER_MINUTE', 60),
         'default_per_page'      => (int) env('ERP_API_DEFAULT_PER_PAGE', 20),

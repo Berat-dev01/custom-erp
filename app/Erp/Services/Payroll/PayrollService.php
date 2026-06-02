@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\View;
 
 class PayrollService
 {
+    public function __construct(private TurkishPayrollCalculator $calculator) {}
+
     public function processPayrollRun(int $year, int $month): PayrollRun
     {
         $existing = PayrollRun::where('year', $year)->where('month', $month)->first();
@@ -66,40 +68,36 @@ class PayrollService
         $salary = $employee->currentSalary();
         $basic  = $salary ? (float) $salary->basic_salary : 0;
 
-        // Temel hesaplama (Türkiye iş kanunu temel çerçevesi)
-        $sgkWorkerRate        = 0.14;
-        $unemploymentWorkerRate = 0.01;
-        $stampTaxRate         = 0.00759;
+        // Kümülatif YTD (bu yılın bordrosundaki brüt toplamı)
+        $cumulativeYTD = Payslip::whereHas('payrollRun', fn ($q) => $q
+                ->where('year', $run->year)
+                ->where('month', '<', $run->month)
+            )
+            ->where('employee_id', $employee->id)
+            ->sum('gross_salary');
 
-        $sgkDeduction         = $basic * $sgkWorkerRate;
-        $unemploymentDeduction= $basic * $unemploymentWorkerRate;
-        $incomeTaxBase        = $basic - $sgkDeduction - $unemploymentDeduction;
-        $incomeTax            = $this->calculateIncomeTax($incomeTaxBase);
-        $stampTax             = $basic * $stampTaxRate;
+        $result = $this->calculator->calculate(
+            grossSalary:       $basic,
+            year:              $run->year,
+            month:             $run->month,
+            cumulativeGrossYTD: (float) $cumulativeYTD + $basic,
+        );
 
-        $totalDeductions = $sgkDeduction + $unemploymentDeduction + $incomeTax + $stampTax;
-        $gross           = $basic;
-        $net             = $gross - $totalDeductions;
+        $totalDeductions = $result['sgk_worker'] + $result['unemployment_worker']
+            + $result['income_tax'] + $result['stamp_tax'];
 
-        $breakdown = [
-            'basic_salary'          => $basic,
-            'gross_salary'          => $gross,
-            'sgk_worker'            => round($sgkDeduction, 2),
-            'unemployment_worker'   => round($unemploymentDeduction, 2),
-            'income_tax_base'       => round($incomeTaxBase, 2),
-            'income_tax'            => round($incomeTax, 2),
-            'stamp_tax'             => round($stampTax, 2),
-            'total_deductions'      => round($totalDeductions, 2),
-            'net_salary'            => round($net, 2),
-        ];
+        $breakdown = array_merge($result, [
+            'basic_salary'     => $basic,
+            'total_deductions' => round($totalDeductions, 2),
+        ]);
 
         return Payslip::updateOrCreate(
             ['payroll_run_id' => $run->id, 'employee_id' => $employee->id],
             [
                 'basic_salary'     => $basic,
-                'gross_salary'     => $gross,
+                'gross_salary'     => $result['gross'],
                 'total_deductions' => round($totalDeductions, 2),
-                'net_salary'       => round($net, 2),
+                'net_salary'       => $result['payment'],
                 'breakdown'        => $breakdown,
                 'status'           => 'draft',
             ]
@@ -149,32 +147,4 @@ class PayrollService
         }
     }
 
-    private function calculateIncomeTax(float $base): float
-    {
-        // 2026 Türkiye gelir vergisi dilimleri (örnek)
-        $brackets = [
-            ['limit' => 110000,  'rate' => 0.15],
-            ['limit' => 230000,  'rate' => 0.20],
-            ['limit' => 870000,  'rate' => 0.27],
-            ['limit' => 3000000, 'rate' => 0.35],
-            ['limit' => PHP_INT_MAX, 'rate' => 0.40],
-        ];
-
-        // Aylık matrah → yıllık projeksiyonu basit temsil (gerçek hesap kümülatif olmalı)
-        $annualBase = $base * 12;
-        $annualTax  = 0;
-        $prev       = 0;
-
-        foreach ($brackets as $bracket) {
-            if ($annualBase <= $prev) {
-                break;
-            }
-
-            $taxable    = min($annualBase, $bracket['limit']) - $prev;
-            $annualTax += $taxable * $bracket['rate'];
-            $prev       = $bracket['limit'];
-        }
-
-        return $annualTax / 12;
-    }
 }

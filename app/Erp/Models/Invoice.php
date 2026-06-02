@@ -28,6 +28,7 @@ class Invoice extends Model
             'tax_amount'      => 'decimal:2',
             'total'           => 'decimal:2',
             'paid_amount'     => 'decimal:2',
+            'efatura_sent_at' => 'datetime',
         ];
     }
 

@@ -96,4 +96,43 @@ class PayrollRunsController extends Controller
         return redirect()->route('erp.employees.show', $employee)
             ->with('success', __('Maaş tanımı eklendi.'));
     }
+
+    public function exportSgkBildirgesi(PayrollRun $payrollRun)
+    {
+        Gate::authorize('erp.payroll.view');
+
+        $payrollRun->loadMissing('payslips.employee');
+
+        $filename = "sgk-bildirgesi-{$payrollRun->year}-{$payrollRun->month}.csv";
+
+        $headers = [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $rows = [];
+        $rows[] = ['TCKN', 'Ad Soyad', 'Prime Esas Kazanç', 'Gün Sayısı', 'Belge Türü'];
+
+        foreach ($payrollRun->payslips as $payslip) {
+            $emp = $payslip->employee;
+            $rows[] = [
+                $emp?->national_id ?? '',
+                $emp?->full_name ?? '',
+                number_format((float) $payslip->gross_salary, 2, '.', ''),
+                30,
+                1, // Standart bildirge türü
+            ];
+        }
+
+        $callback = function () use ($rows): void {
+            $handle = fopen('php://output', 'w');
+            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM for Excel
+            foreach ($rows as $row) {
+                fputcsv($handle, $row, ';');
+            }
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }

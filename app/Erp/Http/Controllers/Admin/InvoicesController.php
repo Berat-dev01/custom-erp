@@ -127,7 +127,9 @@ class InvoicesController extends Controller
 
         $invoice->update(['status' => 'sent']);
 
-        app(\App\Erp\Services\Accounting\AccountingService::class)->postSaleInvoice($invoice->fresh());
+        $fresh = $invoice->fresh();
+        app(\App\Erp\Services\Accounting\AccountingService::class)->postSaleInvoice($fresh);
+        app(\App\Erp\Services\EFatura\EFaturaService::class)->processInvoice($fresh);
 
         return redirect()->route('erp.invoices.show', $invoice)
             ->with('success', __('Fatura gönderildi olarak işaretlendi.'));

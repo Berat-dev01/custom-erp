@@ -67,6 +67,8 @@ class ErpServiceProvider extends ServiceProvider
         $this->app->singleton(PayrollService::class);
         $this->app->singleton(DepreciationService::class);
         $this->app->singleton(\App\Erp\Services\Accounting\AccountingService::class);
+        $this->app->singleton(\App\Erp\Services\Payroll\TurkishPayrollCalculator::class);
+        $this->app->singleton(\App\Erp\Services\EFatura\EFaturaService::class);
     }
 
     public function boot(): void
@@ -193,6 +195,12 @@ class ErpServiceProvider extends ServiceProvider
                 ->monthlyOn(1, '02:00')
                 ->name('erp:run-monthly-depreciation')
                 ->withoutOverlapping();
+
+            $schedule->job(new \App\Erp\Jobs\CheckEFaturaStatusJob())
+                ->everyFiveMinutes()
+                ->name('erp:check-efatura-status')
+                ->withoutOverlapping()
+                ->when(fn () => config('erp.efatura.enabled', false));
         });
     }
 }
