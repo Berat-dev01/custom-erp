@@ -3,6 +3,8 @@
 use App\Erp\Http\Controllers\Admin\AccountsController;
 use App\Erp\Http\Controllers\Admin\ApiTokensController;
 use App\Erp\Http\Controllers\Admin\AssetsController;
+use App\Erp\Http\Controllers\Admin\BankAccountsController;
+use App\Erp\Http\Controllers\Admin\ChecksController;
 use App\Erp\Http\Controllers\Admin\JournalEntriesController;
 use App\Erp\Http\Controllers\Admin\CustomersController;
 use App\Erp\Http\Controllers\Admin\DashboardController;
@@ -84,6 +86,15 @@ Route::middleware(config('erp.routes.middleware', ['web']))
                 // Assets Modülü
                 Route::resource('assets', AssetsController::class);
                 Route::post('assets/{asset}/depreciate', [AssetsController::class, 'depreciate'])->name('assets.depreciate');
+
+                // Kasa & Banka Modülü
+                Route::resource('bank-accounts', BankAccountsController::class)->only(['index', 'create', 'store', 'show']);
+                Route::post('bank-accounts/{bankAccount}/transactions', [BankAccountsController::class, 'storeTransaction'])->name('bank-accounts.store-transaction');
+                Route::post('bank-accounts/{bankAccount}/transfer',     [BankAccountsController::class, 'transfer'])->name('bank-accounts.transfer');
+                Route::post('bank-accounts/{bankAccount}/reconcile',    [BankAccountsController::class, 'reconcile'])->name('bank-accounts.reconcile');
+                Route::post('bank-accounts/{bankAccount}/import',       [BankAccountsController::class, 'importStatement'])->name('bank-accounts.import');
+                Route::resource('checks', ChecksController::class)->only(['index', 'create', 'store', 'destroy']);
+                Route::patch('checks/{check}/status', [ChecksController::class, 'updateStatus'])->name('checks.update-status');
 
                 // Muhasebe Modülü
                 Route::resource('accounts', AccountsController::class)->only(['index', 'show']);

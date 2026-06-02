@@ -120,6 +120,8 @@ return [
             'erp.accounts.create',
             'erp.journal_entries.view',
             'erp.journal_entries.create',
+            'erp.bank.view',
+            'erp.bank.manage',
             'erp.reports.view',
             'erp.api.manage',
             'erp.settings.manage',

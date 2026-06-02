@@ -131,6 +131,14 @@ class ErpNavigation
                 ],
             ],
             [
+                'label' => __('Kasa & Banka'),
+                'icon'  => 'landmark',
+                'items' => [
+                    ['label' => __('Banka Hesapları'), 'route' => 'erp.bank-accounts.index', 'permission' => 'erp.bank.view'],
+                    ['label' => __('Çek/Senet'),       'route' => 'erp.checks.index',        'permission' => 'erp.bank.view'],
+                ],
+            ],
+            [
                 'label' => __('Muhasebe'),
                 'icon'  => 'book-open',
                 'items' => [
