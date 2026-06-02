@@ -2,6 +2,7 @@
 
 use App\Erp\Http\Controllers\Admin\AccountsController;
 use App\Erp\Http\Controllers\Admin\ApiTokensController;
+use App\Erp\Http\Controllers\Admin\CurrenciesController;
 use App\Erp\Http\Controllers\Admin\AssetsController;
 use App\Erp\Http\Controllers\Admin\AttendanceController;
 use App\Erp\Http\Controllers\Admin\BankAccountsController;
@@ -117,6 +118,12 @@ Route::middleware(config('erp.routes.middleware', ['web']))
                 Route::get('reports/balance-sheet',    [ReportsController::class, 'balanceSheet'])->name('reports.balance-sheet');
                 Route::get('reports/income-statement', [ReportsController::class, 'incomeStatement'])->name('reports.income-statement');
                 Route::get('reports/tax-report',       [ReportsController::class, 'taxReport'])->name('reports.tax-report');
+
+                // Para Birimi & Kur Yönetimi
+                Route::get('currencies',           [CurrenciesController::class, 'index'])->name('currencies.index');
+                Route::post('currencies',          [CurrenciesController::class, 'store'])->name('currencies.store');
+                Route::post('currencies/rates',    [CurrenciesController::class, 'storeRate'])->name('currencies.store-rate');
+                Route::post('currencies/fetch-tcmb',[CurrenciesController::class, 'fetchTcmb'])->name('currencies.fetch-tcmb');
 
                 // API Token Yönetimi
                 Route::get('api-tokens',              [ApiTokensController::class, 'index'])->name('api-tokens.index');

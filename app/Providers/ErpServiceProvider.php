@@ -69,6 +69,7 @@ class ErpServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Erp\Services\Accounting\AccountingService::class);
         $this->app->singleton(\App\Erp\Services\Payroll\TurkishPayrollCalculator::class);
         $this->app->singleton(\App\Erp\Services\EFatura\EFaturaService::class);
+        $this->app->singleton(\App\Erp\Services\Currency\CurrencyService::class);
     }
 
     public function boot(): void
@@ -201,6 +202,12 @@ class ErpServiceProvider extends ServiceProvider
                 ->name('erp:check-efatura-status')
                 ->withoutOverlapping()
                 ->when(fn () => config('erp.efatura.enabled', false));
+
+            $schedule->call(fn () => $this->app->make(\App\Erp\Services\Currency\CurrencyService::class)->fetchTcmbRates())
+                ->weekdays()
+                ->at('09:30')
+                ->name('erp:fetch-tcmb-rates')
+                ->withoutOverlapping();
         });
     }
 }

@@ -166,7 +166,8 @@ class ErpNavigation
                 'label' => __('Sistem'),
                 'icon'  => 'settings',
                 'items' => [
-                    ['label' => __('API Tokenleri'), 'route' => 'erp.api-tokens.index', 'permission' => 'erp.api.manage'],
+                    ['label' => __('Para Birimleri'), 'route' => 'erp.currencies.index',  'permission' => 'erp.settings.manage'],
+                    ['label' => __('API Tokenleri'),  'route' => 'erp.api-tokens.index',  'permission' => 'erp.api.manage'],
                 ],
             ],
         ];
