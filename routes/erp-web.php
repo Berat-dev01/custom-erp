@@ -3,7 +3,9 @@
 use App\Erp\Http\Controllers\Admin\AccountsController;
 use App\Erp\Http\Controllers\Admin\ApiTokensController;
 use App\Erp\Http\Controllers\Admin\AssetsController;
+use App\Erp\Http\Controllers\Admin\AttendanceController;
 use App\Erp\Http\Controllers\Admin\BankAccountsController;
+use App\Erp\Http\Controllers\Admin\LeaveRequestsController;
 use App\Erp\Http\Controllers\Admin\ChecksController;
 use App\Erp\Http\Controllers\Admin\JournalEntriesController;
 use App\Erp\Http\Controllers\Admin\CustomersController;
@@ -39,6 +41,15 @@ Route::middleware(config('erp.routes.middleware', ['web']))
                 Route::resource('employees',   EmployeesController::class);
                 Route::resource('departments', DepartmentsController::class);
                 Route::resource('positions',   PositionsController::class);
+
+                // İzin & Devam Modülü
+                Route::resource('leave-requests', LeaveRequestsController::class)->only(['index', 'create', 'store']);
+                Route::patch('leave-requests/{leave_request}/approve', [LeaveRequestsController::class, 'approve'])->name('leave-requests.approve');
+                Route::patch('leave-requests/{leave_request}/reject',  [LeaveRequestsController::class, 'reject'])->name('leave-requests.reject');
+                Route::patch('leave-requests/{leave_request}/cancel',  [LeaveRequestsController::class, 'cancel'])->name('leave-requests.cancel');
+                Route::get('attendance',                                  [AttendanceController::class, 'index'])->name('attendance.index');
+                Route::post('attendance',                                 [AttendanceController::class, 'store'])->name('attendance.store');
+                Route::get('attendance/{employee}/monthly-report',        [AttendanceController::class, 'monthlyReport'])->name('attendance.monthly-report');
 
                 // Inventory Modülü
                 Route::resource('products',        ProductsController::class);

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Erp\Database\Seeders\ChartOfAccountsSeeder;
 use App\Erp\Database\Seeders\ErpPermissionSeeder;
+use App\Erp\Database\Seeders\PublicHolidaySeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,6 +14,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ErpPermissionSeeder::class,
             ChartOfAccountsSeeder::class,
+            PublicHolidaySeeder::class,
             ErpSeeder::class,
         ]);
     }

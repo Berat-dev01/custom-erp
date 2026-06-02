@@ -70,9 +70,11 @@ class ErpNavigation
                 'label' => __('İK'),
                 'icon'  => 'users',
                 'items' => [
-                    ['label' => __('Çalışanlar'),   'route' => 'erp.employees.index',  'permission' => 'erp.employees.view'],
-                    ['label' => __('Departmanlar'), 'route' => 'erp.departments.index', 'permission' => 'erp.departments.view'],
-                    ['label' => __('Pozisyonlar'),  'route' => 'erp.positions.index',   'permission' => 'erp.positions.view'],
+                    ['label' => __('Çalışanlar'),     'route' => 'erp.employees.index',      'permission' => 'erp.employees.view'],
+                    ['label' => __('Departmanlar'),   'route' => 'erp.departments.index',    'permission' => 'erp.departments.view'],
+                    ['label' => __('Pozisyonlar'),    'route' => 'erp.positions.index',      'permission' => 'erp.positions.view'],
+                    ['label' => __('İzin Talepleri'), 'route' => 'erp.leave-requests.index', 'permission' => 'erp.leave.view'],
+                    ['label' => __('Devam Çizelgesi'),'route' => 'erp.attendance.index',    'permission' => 'erp.attendance.view'],
                 ],
             ],
             [
