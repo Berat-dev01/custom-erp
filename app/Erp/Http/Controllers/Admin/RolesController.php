@@ -108,7 +108,8 @@ class RolesController extends Controller
             'role' => ['required', 'exists:roles,name'],
         ]);
 
-        $user->assignRole($data['role']);
+        $role = Role::findByName($data['role'], $this->catalog->guardName());
+        $user->assignRole($role);
 
         return back()->with('success', __('Rol atandı.'));
     }
@@ -121,7 +122,8 @@ class RolesController extends Controller
             'role' => ['required', 'exists:roles,name'],
         ]);
 
-        $user->removeRole($data['role']);
+        $role = Role::findByName($data['role'], $this->catalog->guardName());
+        $user->removeRole($role);
 
         return back()->with('success', __('Rol kaldırıldı.'));
     }

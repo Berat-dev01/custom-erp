@@ -123,7 +123,7 @@ class CurrencyService
     {
         return ExchangeRate::where('from_currency', $from)
             ->where('to_currency', $to)
-            ->where('rate_date', '<=', $date->toDateString())
+            ->whereDate('rate_date', '<=', $date->toDateString())
             ->orderByDesc('rate_date')
             ->first();
     }

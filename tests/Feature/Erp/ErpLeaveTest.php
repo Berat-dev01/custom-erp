@@ -71,9 +71,9 @@ class ErpLeaveTest extends TestCase
             'status'    => 'active',
         ]);
 
-        // <1 yıl kıdeme sahip çalışan 14 gün hak kazanır (Türk iş hukuku)
+        // Türk iş hukuku: ilk yıl tamamlanmadan izin hakkı kazanılmaz
         $days = $this->leaveService->calculateEntitlement($newEmployee, now()->year);
-        $this->assertEquals(14, $days);
+        $this->assertEquals(0, $days);
     }
 
     public function test_entitlement_between_five_and_fifteen_years(): void

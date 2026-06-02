@@ -98,31 +98,33 @@ class ErpRolePermissionTest extends TestCase
     public function test_admin_can_assign_role_to_user(): void
     {
         $targetUser = User::factory()->create(['is_active' => true]);
+        $guard      = $this->catalog->guardName();
 
         $this->actingAs($this->admin, 'admin')
             ->post(route('erp.roles.assign', $targetUser), ['role' => 'erp_viewer'])
             ->assertRedirect();
 
-        $this->assertTrue($targetUser->fresh()->hasRole('erp_viewer'));
+        $this->assertTrue($targetUser->fresh()->hasRole('erp_viewer', $guard));
     }
 
     public function test_admin_can_remove_role_from_user(): void
     {
         $targetUser = User::factory()->create(['is_active' => true]);
-        $targetUser->assignRole('erp_viewer');
+        $guard      = $this->catalog->guardName();
+        $targetUser->assignRole(Role::findByName('erp_viewer', $guard));
 
         $this->actingAs($this->admin, 'admin')
             ->post(route('erp.roles.remove', $targetUser), ['role' => 'erp_viewer'])
             ->assertRedirect();
 
-        $this->assertFalse($targetUser->fresh()->hasRole('erp_viewer'));
+        $this->assertFalse($targetUser->fresh()->hasRole('erp_viewer', $guard));
     }
 
     public function test_system_roles_cannot_be_deleted(): void
     {
         $this->actingAs($this->admin, 'admin')
             ->delete(route('erp.roles.destroy', Role::findByName('erp_admin', $this->catalog->guardName())))
-            ->assertRedirect();
+            ->assertForbidden();
 
         $this->assertDatabaseHas('roles', ['name' => 'erp_admin']);
     }

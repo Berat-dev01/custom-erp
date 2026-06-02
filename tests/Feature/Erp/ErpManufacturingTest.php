@@ -67,6 +67,8 @@ class ErpManufacturingTest extends TestCase
 
     public function test_release_reserves_components(): void
     {
+        $this->actingAs($this->admin, 'admin');
+
         $mamul     = $this->makeProduct('MAM-001');
         $hammadde  = $this->makeProduct('HM-001', 50);
 
@@ -111,6 +113,8 @@ class ErpManufacturingTest extends TestCase
 
     public function test_complete_work_order_moves_stock(): void
     {
+        $this->actingAs($this->admin, 'admin');
+
         $mamul    = $this->makeProduct('MAM-002');
         $hammadde = $this->makeProduct('HM-002', 30);
 
