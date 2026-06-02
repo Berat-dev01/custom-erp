@@ -12,6 +12,11 @@ class Unit extends Model
 
     protected $table = 'erp_units';
 
+    protected static function newFactory(): \Database\Factories\Erp\UnitFactory
+    {
+        return \Database\Factories\Erp\UnitFactory::new();
+    }
+
     protected $guarded = ['id'];
 
     public function products(): HasMany

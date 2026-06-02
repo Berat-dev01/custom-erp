@@ -12,6 +12,11 @@ class Employee extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected static function newFactory(): \Database\Factories\Erp\EmployeeFactory
+    {
+        return \Database\Factories\Erp\EmployeeFactory::new();
+    }
+
     protected $table = 'erp_employees';
 
     protected $guarded = ['id'];

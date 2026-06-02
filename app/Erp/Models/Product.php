@@ -12,6 +12,11 @@ class Product extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected static function newFactory(): \Database\Factories\Erp\ProductFactory
+    {
+        return \Database\Factories\Erp\ProductFactory::new();
+    }
+
     protected $table = 'erp_products';
 
     protected $guarded = ['id'];

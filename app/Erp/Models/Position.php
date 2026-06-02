@@ -13,6 +13,11 @@ class Position extends Model
 
     protected $table = 'erp_positions';
 
+    protected static function newFactory(): \Database\Factories\Erp\PositionFactory
+    {
+        return \Database\Factories\Erp\PositionFactory::new();
+    }
+
     protected $guarded = ['id'];
 
     protected function casts(): array

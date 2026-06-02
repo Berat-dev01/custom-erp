@@ -13,6 +13,11 @@ class Customer extends Model
 
     protected $table = 'erp_customers';
 
+    protected static function newFactory(): \Database\Factories\Erp\CustomerFactory
+    {
+        return \Database\Factories\Erp\CustomerFactory::new();
+    }
+
     protected $guarded = ['id'];
 
     protected function casts(): array

@@ -14,6 +14,11 @@ class Department extends Model
 
     protected $table = 'erp_departments';
 
+    protected static function newFactory(): \Database\Factories\Erp\DepartmentFactory
+    {
+        return \Database\Factories\Erp\DepartmentFactory::new();
+    }
+
     protected $guarded = ['id'];
 
     protected function casts(): array

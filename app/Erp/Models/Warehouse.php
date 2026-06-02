@@ -12,6 +12,11 @@ class Warehouse extends Model
 
     protected $table = 'erp_warehouses';
 
+    protected static function newFactory(): \Database\Factories\Erp\WarehouseFactory
+    {
+        return \Database\Factories\Erp\WarehouseFactory::new();
+    }
+
     protected $guarded = ['id'];
 
     protected function casts(): array
