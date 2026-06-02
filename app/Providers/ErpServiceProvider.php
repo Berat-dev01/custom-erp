@@ -12,6 +12,7 @@ use App\Erp\Models\Customer;
 use App\Erp\Models\Expense;
 use App\Erp\Models\Invoice;
 use App\Erp\Models\PurchaseOrder;
+use App\Erp\Models\Project;
 use App\Erp\Models\SalesOrder;
 use App\Erp\Models\Supplier;
 use App\Erp\Models\Warehouse;
@@ -22,6 +23,7 @@ use App\Erp\Policies\ExpensePolicy;
 use App\Erp\Policies\InvoicePolicy;
 use App\Erp\Policies\PositionPolicy;
 use App\Erp\Policies\ProductPolicy;
+use App\Erp\Policies\ProjectPolicy;
 use App\Erp\Policies\PurchaseOrderPolicy;
 use App\Erp\Policies\SalesOrderPolicy;
 use App\Erp\Policies\SupplierPolicy;
@@ -77,6 +79,7 @@ class ErpServiceProvider extends ServiceProvider
             'erp_expense'        => Expense::class,
             'erp_customer'       => Customer::class,
             'erp_sales_order'    => SalesOrder::class,
+            'erp_project'        => Project::class,
         ]);
 
         $this->loadViewsFrom(resource_path('views/erp'), 'erp');
@@ -115,6 +118,7 @@ class ErpServiceProvider extends ServiceProvider
         Gate::policy(Expense::class, ExpensePolicy::class);
         Gate::policy(Customer::class, CustomerPolicy::class);
         Gate::policy(SalesOrder::class, SalesOrderPolicy::class);
+        Gate::policy(Project::class, ProjectPolicy::class);
 
         $catalog = $this->app->make(ErpPermissionCatalog::class);
 

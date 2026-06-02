@@ -11,6 +11,8 @@ use App\Erp\Http\Controllers\Admin\ProductsController;
 use App\Erp\Http\Controllers\Admin\PurchaseOrdersController;
 use App\Erp\Http\Controllers\Admin\PayrollRunsController;
 use App\Erp\Http\Controllers\Admin\PayslipsController;
+use App\Erp\Http\Controllers\Admin\ProjectsController;
+use App\Erp\Http\Controllers\Admin\ProjectTasksController;
 use App\Erp\Http\Controllers\Admin\SalesOrdersController;
 use App\Erp\Http\Controllers\Admin\StockMovementsController;
 use App\Erp\Http\Controllers\Admin\SuppliersController;
@@ -65,5 +67,13 @@ Route::middleware(config('erp.routes.middleware', ['web']))
                 Route::post('employees/{employee}/salary',        [PayrollRunsController::class, 'salaryStore'])->name('employees.salary.store');
                 Route::get('payslips/{payslip}',     [PayslipsController::class, 'show'])->name('payslips.show');
                 Route::get('payslips/{payslip}/pdf', [PayslipsController::class, 'pdf'])->name('payslips.pdf');
+
+                // Projects Modülü
+                Route::resource('projects', ProjectsController::class);
+                Route::post('projects/{project}/time-entries', [ProjectsController::class, 'storeTimeEntry'])->name('projects.time-entries.store');
+                Route::post('projects/{project}/tasks',                          [ProjectTasksController::class, 'store'])->name('projects.tasks.store');
+                Route::put('projects/{project}/tasks/{task}',                    [ProjectTasksController::class, 'update'])->name('projects.tasks.update');
+                Route::patch('projects/{project}/tasks/{task}/status',           [ProjectTasksController::class, 'updateStatus'])->name('projects.tasks.update-status');
+                Route::delete('projects/{project}/tasks/{task}',                 [ProjectTasksController::class, 'destroy'])->name('projects.tasks.destroy');
             });
     });
