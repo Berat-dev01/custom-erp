@@ -18,6 +18,44 @@ class SalesOrderService
         private readonly InvoiceService $invoiceService,
     ) {}
 
+    public function createOrder(array $data, \App\Models\User $user): SalesOrder
+    {
+        return DB::transaction(function () use ($data, $user): SalesOrder {
+            $order = SalesOrder::create([
+                'so_number'               => $this->generateSoNumber(),
+                'customer_id'             => $data['customer_id'],
+                'warehouse_id'            => $data['warehouse_id'],
+                'order_date'              => $data['order_date'],
+                'requested_delivery_date' => $data['requested_delivery_date'] ?? null,
+                'discount_amount'         => $data['discount_amount'] ?? 0,
+                'notes'                   => $data['notes'] ?? null,
+                'status'                  => 'draft',
+                'created_by'              => $user->id,
+            ]);
+
+            foreach ($data['items'] as $item) {
+                $base       = (float) $item['unit_price'] * (float) $item['quantity'];
+                $discounted = $base * (1 - ((float) ($item['discount_rate'] ?? 0)) / 100);
+                $tax        = $discounted * ((float) ($item['tax_rate'] ?? 20)) / 100;
+
+                \App\Erp\Models\SalesOrderItem::create([
+                    'sales_order_id' => $order->id,
+                    'product_id'     => $item['product_id'],
+                    'quantity'       => $item['quantity'],
+                    'unit_price'     => $item['unit_price'],
+                    'tax_rate'       => $item['tax_rate'] ?? 20,
+                    'discount_rate'  => $item['discount_rate'] ?? 0,
+                    'line_total'     => $discounted + $tax,
+                ]);
+            }
+
+            $order->load('items');
+            $this->recalculateTotals($order);
+
+            return $order;
+        });
+    }
+
     public function generateSoNumber(): string
     {
         $year = now()->year;

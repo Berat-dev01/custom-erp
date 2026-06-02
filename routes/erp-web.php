@@ -1,5 +1,6 @@
 <?php
 
+use App\Erp\Http\Controllers\Admin\ApiTokensController;
 use App\Erp\Http\Controllers\Admin\AssetsController;
 use App\Erp\Http\Controllers\Admin\CustomersController;
 use App\Erp\Http\Controllers\Admin\DashboardController;
@@ -81,6 +82,11 @@ Route::middleware(config('erp.routes.middleware', ['web']))
                 // Assets Modülü
                 Route::resource('assets', AssetsController::class);
                 Route::post('assets/{asset}/depreciate', [AssetsController::class, 'depreciate'])->name('assets.depreciate');
+
+                // API Token Yönetimi
+                Route::get('api-tokens',              [ApiTokensController::class, 'index'])->name('api-tokens.index');
+                Route::post('api-tokens',             [ApiTokensController::class, 'store'])->name('api-tokens.store');
+                Route::delete('api-tokens/{apiToken}',[ApiTokensController::class, 'destroy'])->name('api-tokens.destroy');
 
                 // Raporlar Modülü
                 Route::get('reports',           [ReportsController::class, 'index'])->name('reports.index');

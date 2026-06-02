@@ -117,13 +117,14 @@ return [
             'erp.assets.delete',
 
             'erp.reports.view',
+            'erp.api.manage',
             'erp.settings.manage',
             'erp.users.manage',
         ],
         'roles' => [
             'erp_admin' => [
                 'name'        => 'erp_admin',
-                'permissions' => ['*'],
+                'permissions' => ['*'],  // wildcard — ErpPermissionCatalog expands this
             ],
             'erp_hr' => [
                 'name'        => 'erp_hr',

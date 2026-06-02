@@ -140,6 +140,13 @@ class ErpNavigation
                     ['label' => __('Yaşlandırma'),      'route' => 'erp.reports.aging',     'permission' => 'erp.reports.view'],
                 ],
             ],
+            [
+                'label' => __('Sistem'),
+                'icon'  => 'settings',
+                'items' => [
+                    ['label' => __('API Tokenleri'), 'route' => 'erp.api-tokens.index', 'permission' => 'erp.api.manage'],
+                ],
+            ],
         ];
     }
 }
