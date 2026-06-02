@@ -174,8 +174,9 @@ class ErpNavigation
                 'label' => __('Sistem'),
                 'icon'  => 'settings',
                 'items' => [
-                    ['label' => __('Para Birimleri'), 'route' => 'erp.currencies.index',  'permission' => 'erp.settings.manage'],
-                    ['label' => __('API Tokenleri'),  'route' => 'erp.api-tokens.index',  'permission' => 'erp.api.manage'],
+                    ['label' => __('Roller & Yetkiler'), 'route' => 'erp.roles.index',      'permission' => 'erp.users.manage'],
+                    ['label' => __('Para Birimleri'),    'route' => 'erp.currencies.index', 'permission' => 'erp.settings.manage'],
+                    ['label' => __('API Tokenleri'),     'route' => 'erp.api-tokens.index', 'permission' => 'erp.api.manage'],
                 ],
             ],
         ];

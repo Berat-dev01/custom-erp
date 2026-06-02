@@ -4,6 +4,7 @@ use App\Erp\Http\Controllers\Admin\AccountsController;
 use App\Erp\Http\Controllers\Admin\ApiTokensController;
 use App\Erp\Http\Controllers\Admin\BomsController;
 use App\Erp\Http\Controllers\Admin\CurrenciesController;
+use App\Erp\Http\Controllers\Admin\RolesController;
 use App\Erp\Http\Controllers\Admin\WorkOrdersController;
 use App\Erp\Http\Controllers\Admin\AssetsController;
 use App\Erp\Http\Controllers\Admin\AttendanceController;
@@ -133,6 +134,12 @@ Route::middleware(config('erp.routes.middleware', ['web']))
                 Route::post('currencies',          [CurrenciesController::class, 'store'])->name('currencies.store');
                 Route::post('currencies/rates',    [CurrenciesController::class, 'storeRate'])->name('currencies.store-rate');
                 Route::post('currencies/fetch-tcmb',[CurrenciesController::class, 'fetchTcmb'])->name('currencies.fetch-tcmb');
+
+                // Rol & Yetki Yönetimi
+                Route::resource('roles', RolesController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+                Route::get('roles-users',                   [RolesController::class, 'users'])->name('roles.users');
+                Route::post('roles-users/{user}/assign',    [RolesController::class, 'assignRole'])->name('roles.assign');
+                Route::post('roles-users/{user}/remove',    [RolesController::class, 'removeRole'])->name('roles.remove');
 
                 // API Token Yönetimi
                 Route::get('api-tokens',              [ApiTokensController::class, 'index'])->name('api-tokens.index');
