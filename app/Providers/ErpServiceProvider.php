@@ -4,6 +4,12 @@ namespace App\Providers;
 
 use App\Erp\Http\Middleware\AuthenticateErpApi;
 use App\Erp\Http\Middleware\EnsureErpAccess;
+use App\Erp\Models\Department;
+use App\Erp\Models\Employee;
+use App\Erp\Models\Position;
+use App\Erp\Policies\DepartmentPolicy;
+use App\Erp\Policies\EmployeePolicy;
+use App\Erp\Policies\PositionPolicy;
 use App\Erp\Services\Authorization\ErpAuthorization;
 use App\Erp\Services\Authorization\ErpPermissionCatalog;
 use App\Erp\Services\Navigation\ErpNavigation;
@@ -34,6 +40,9 @@ class ErpServiceProvider extends ServiceProvider
     {
         Relation::morphMap([
             'erp_api_token' => \App\Erp\Models\ErpApiToken::class,
+            'erp_employee'  => Employee::class,
+            'erp_department'=> Department::class,
+            'erp_position'  => Position::class,
         ]);
 
         $this->loadViewsFrom(resource_path('views/erp'), 'erp');
@@ -61,6 +70,10 @@ class ErpServiceProvider extends ServiceProvider
 
     private function registerAuthorization(): void
     {
+        Gate::policy(Employee::class, EmployeePolicy::class);
+        Gate::policy(Department::class, DepartmentPolicy::class);
+        Gate::policy(Position::class, PositionPolicy::class);
+
         $catalog = $this->app->make(ErpPermissionCatalog::class);
 
         foreach ($catalog->permissions() as $permission) {

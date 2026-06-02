@@ -1,6 +1,9 @@
 <?php
 
 use App\Erp\Http\Controllers\Admin\DashboardController;
+use App\Erp\Http\Controllers\Admin\DepartmentsController;
+use App\Erp\Http\Controllers\Admin\EmployeesController;
+use App\Erp\Http\Controllers\Admin\PositionsController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(config('erp.routes.middleware', ['web']))
@@ -12,6 +15,9 @@ Route::middleware(config('erp.routes.middleware', ['web']))
                 Route::get('/', fn () => redirect()->route('erp.dashboard'))->name('home');
                 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-                // Modül rotaları her fazda buraya eklenecek
+                // HR Modülü
+                Route::resource('employees',  EmployeesController::class);
+                Route::resource('departments', DepartmentsController::class);
+                Route::resource('positions',   PositionsController::class);
             });
     });
