@@ -69,11 +69,14 @@ class LeaveRequestsController extends Controller
             return back()->withErrors(['start_date' => __('Seçilen tarih aralığında iş günü yok.')])->withInput();
         }
 
-        LeaveRequest::create([
+        $leaveRequest = LeaveRequest::create([
             ...$data,
             'days'   => $days,
             'status' => 'pending',
         ]);
+
+        app(\App\Erp\Services\Notification\NotificationService::class)
+            ->notifyLeaveRequest($leaveRequest->load('employee'), 'submitted');
 
         return redirect()->route('erp.leave-requests.index')
             ->with('success', __('İzin talebi oluşturuldu.'));

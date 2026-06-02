@@ -208,6 +208,23 @@ class ErpServiceProvider extends ServiceProvider
                 ->at('09:30')
                 ->name('erp:fetch-tcmb-rates')
                 ->withoutOverlapping();
+
+            $notifService = fn () => $this->app->make(\App\Erp\Services\Notification\NotificationService::class);
+
+            $schedule->call(fn () => $notifService()->sendOverdueInvoiceAlerts())
+                ->dailyAt('08:00')
+                ->name('erp:overdue-invoice-alerts')
+                ->withoutOverlapping();
+
+            $schedule->call(fn () => $notifService()->sendLowStockAlerts())
+                ->dailyAt('08:05')
+                ->name('erp:low-stock-alerts')
+                ->withoutOverlapping();
+
+            $schedule->call(fn () => $notifService()->sendCheckDueDateAlerts())
+                ->dailyAt('08:10')
+                ->name('erp:check-due-alerts')
+                ->withoutOverlapping();
         });
     }
 }
