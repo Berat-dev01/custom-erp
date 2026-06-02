@@ -156,4 +156,40 @@ class InvoicesController extends Controller
             'Content-Disposition' => 'inline; filename="' . $invoice->invoice_number . '.pdf"',
         ]);
     }
+
+    public function sendEfatura(Invoice $invoice)
+    {
+        Gate::authorize('erp.invoices.update');
+
+        $service = app(\App\Erp\Services\EFatura\EFaturaService::class);
+
+        if (! $service->isEnabled()) {
+            return redirect()->route('erp.invoices.show', $invoice)
+                ->with('error', __('e-Fatura modülü aktif değil. Lütfen .env ayarlarını kontrol edin.'));
+        }
+
+        $result = $service->processInvoice($invoice);
+
+        $message = $result ? __('e-Fatura gönderildi.') : __('e-Fatura gönderilemedi. Lütfen tekrar deneyin.');
+
+        return redirect()->route('erp.invoices.show', $invoice)
+            ->with($result ? 'success' : 'error', $message);
+    }
+
+    public function cancelEfatura(Invoice $invoice)
+    {
+        Gate::authorize('erp.invoices.update');
+
+        $service = app(\App\Erp\Services\EFatura\EFaturaService::class);
+
+        if (! $service->isEnabled()) {
+            return redirect()->route('erp.invoices.show', $invoice)
+                ->with('error', __('e-Fatura modülü aktif değil.'));
+        }
+
+        $success = $service->cancelInvoice($invoice);
+
+        return redirect()->route('erp.invoices.show', $invoice)
+            ->with($success ? 'success' : 'error', $success ? __('e-Fatura iptal edildi.') : __('e-Fatura iptal edilemedi.'));
+    }
 }
