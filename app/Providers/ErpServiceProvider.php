@@ -8,11 +8,14 @@ use App\Erp\Models\Department;
 use App\Erp\Models\Employee;
 use App\Erp\Models\Position;
 use App\Erp\Models\Product;
+use App\Erp\Models\Customer;
 use App\Erp\Models\Expense;
 use App\Erp\Models\Invoice;
 use App\Erp\Models\PurchaseOrder;
+use App\Erp\Models\SalesOrder;
 use App\Erp\Models\Supplier;
 use App\Erp\Models\Warehouse;
+use App\Erp\Policies\CustomerPolicy;
 use App\Erp\Policies\DepartmentPolicy;
 use App\Erp\Policies\EmployeePolicy;
 use App\Erp\Policies\ExpensePolicy;
@@ -20,11 +23,13 @@ use App\Erp\Policies\InvoicePolicy;
 use App\Erp\Policies\PositionPolicy;
 use App\Erp\Policies\ProductPolicy;
 use App\Erp\Policies\PurchaseOrderPolicy;
+use App\Erp\Policies\SalesOrderPolicy;
 use App\Erp\Policies\SupplierPolicy;
 use App\Erp\Policies\WarehousePolicy;
 use App\Erp\Services\Finance\InvoiceService;
 use App\Erp\Services\Inventory\StockService;
 use App\Erp\Services\Procurement\PurchaseOrderService;
+use App\Erp\Services\Sales\SalesOrderService;
 use App\Erp\Services\Authorization\ErpAuthorization;
 use App\Erp\Services\Authorization\ErpPermissionCatalog;
 use App\Erp\Services\Navigation\ErpNavigation;
@@ -52,6 +57,7 @@ class ErpServiceProvider extends ServiceProvider
         $this->app->singleton(StockService::class);
         $this->app->singleton(PurchaseOrderService::class);
         $this->app->singleton(InvoiceService::class);
+        $this->app->singleton(SalesOrderService::class);
     }
 
     public function boot(): void
@@ -67,6 +73,8 @@ class ErpServiceProvider extends ServiceProvider
             'erp_purchase_order' => PurchaseOrder::class,
             'erp_invoice'        => Invoice::class,
             'erp_expense'        => Expense::class,
+            'erp_customer'       => Customer::class,
+            'erp_sales_order'    => SalesOrder::class,
         ]);
 
         $this->loadViewsFrom(resource_path('views/erp'), 'erp');
@@ -103,6 +111,8 @@ class ErpServiceProvider extends ServiceProvider
         Gate::policy(PurchaseOrder::class, PurchaseOrderPolicy::class);
         Gate::policy(Invoice::class, InvoicePolicy::class);
         Gate::policy(Expense::class, ExpensePolicy::class);
+        Gate::policy(Customer::class, CustomerPolicy::class);
+        Gate::policy(SalesOrder::class, SalesOrderPolicy::class);
 
         $catalog = $this->app->make(ErpPermissionCatalog::class);
 

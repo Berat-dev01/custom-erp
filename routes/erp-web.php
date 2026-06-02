@@ -1,5 +1,6 @@
 <?php
 
+use App\Erp\Http\Controllers\Admin\CustomersController;
 use App\Erp\Http\Controllers\Admin\DashboardController;
 use App\Erp\Http\Controllers\Admin\DepartmentsController;
 use App\Erp\Http\Controllers\Admin\EmployeesController;
@@ -8,6 +9,7 @@ use App\Erp\Http\Controllers\Admin\InvoicesController;
 use App\Erp\Http\Controllers\Admin\PositionsController;
 use App\Erp\Http\Controllers\Admin\ProductsController;
 use App\Erp\Http\Controllers\Admin\PurchaseOrdersController;
+use App\Erp\Http\Controllers\Admin\SalesOrdersController;
 use App\Erp\Http\Controllers\Admin\StockMovementsController;
 use App\Erp\Http\Controllers\Admin\SuppliersController;
 use App\Erp\Http\Controllers\Admin\WarehousesController;
@@ -45,5 +47,13 @@ Route::middleware(config('erp.routes.middleware', ['web']))
                 Route::post('invoices/{invoice}/payments',     [InvoicesController::class, 'storePayment'])->name('invoices.payments.store');
                 Route::get('invoices/{invoice}/pdf',           [InvoicesController::class, 'downloadPdf'])->name('invoices.pdf');
                 Route::resource('expenses', ExpensesController::class)->except(['show']);
+
+                // Sales Modülü
+                Route::resource('customers',   CustomersController::class);
+                Route::resource('sales-orders', SalesOrdersController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+                Route::post('sales-orders/{sales_order}/confirm',        [SalesOrdersController::class, 'confirm'])->name('sales-orders.confirm');
+                Route::post('sales-orders/{sales_order}/deliver',        [SalesOrdersController::class, 'deliver'])->name('sales-orders.deliver');
+                Route::post('sales-orders/{sales_order}/cancel',         [SalesOrdersController::class, 'cancel'])->name('sales-orders.cancel');
+                Route::post('sales-orders/{sales_order}/create-invoice', [SalesOrdersController::class, 'createInvoice'])->name('sales-orders.create-invoice');
             });
     });
