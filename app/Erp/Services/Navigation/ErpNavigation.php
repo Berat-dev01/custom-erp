@@ -131,10 +131,13 @@ class ErpNavigation
                 ],
             ],
             [
-                'label' => __('Sistem'),
-                'icon'  => 'settings',
+                'label' => __('Raporlar'),
+                'icon'  => 'bar-chart-2',
                 'items' => [
-                    ['label' => __('Raporlar'), 'route' => 'erp.reports.index', 'permission' => 'erp.reports.view'],
+                    ['label' => __('Gelir / Gider'),   'route' => 'erp.reports.revenue',   'permission' => 'erp.reports.view'],
+                    ['label' => __('Stok Değeri'),      'route' => 'erp.reports.inventory', 'permission' => 'erp.reports.view'],
+                    ['label' => __('İK Özeti'),         'route' => 'erp.reports.hr',        'permission' => 'erp.reports.view'],
+                    ['label' => __('Yaşlandırma'),      'route' => 'erp.reports.aging',     'permission' => 'erp.reports.view'],
                 ],
             ],
         ];

@@ -3,6 +3,7 @@
 use App\Erp\Http\Controllers\Admin\AssetsController;
 use App\Erp\Http\Controllers\Admin\CustomersController;
 use App\Erp\Http\Controllers\Admin\DashboardController;
+use App\Erp\Http\Controllers\Admin\ReportsController;
 use App\Erp\Http\Controllers\Admin\DepartmentsController;
 use App\Erp\Http\Controllers\Admin\EmployeesController;
 use App\Erp\Http\Controllers\Admin\ExpensesController;
@@ -80,5 +81,12 @@ Route::middleware(config('erp.routes.middleware', ['web']))
                 // Assets Modülü
                 Route::resource('assets', AssetsController::class);
                 Route::post('assets/{asset}/depreciate', [AssetsController::class, 'depreciate'])->name('assets.depreciate');
+
+                // Raporlar Modülü
+                Route::get('reports',           [ReportsController::class, 'index'])->name('reports.index');
+                Route::get('reports/revenue',   [ReportsController::class, 'revenueReport'])->name('reports.revenue');
+                Route::get('reports/inventory', [ReportsController::class, 'inventoryReport'])->name('reports.inventory');
+                Route::get('reports/hr',        [ReportsController::class, 'hrReport'])->name('reports.hr');
+                Route::get('reports/aging',     [ReportsController::class, 'agingReport'])->name('reports.aging');
             });
     });
