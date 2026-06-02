@@ -7,9 +7,14 @@ use App\Erp\Http\Middleware\EnsureErpAccess;
 use App\Erp\Models\Department;
 use App\Erp\Models\Employee;
 use App\Erp\Models\Position;
+use App\Erp\Models\Product;
+use App\Erp\Models\Warehouse;
 use App\Erp\Policies\DepartmentPolicy;
 use App\Erp\Policies\EmployeePolicy;
 use App\Erp\Policies\PositionPolicy;
+use App\Erp\Policies\ProductPolicy;
+use App\Erp\Policies\WarehousePolicy;
+use App\Erp\Services\Inventory\StockService;
 use App\Erp\Services\Authorization\ErpAuthorization;
 use App\Erp\Services\Authorization\ErpPermissionCatalog;
 use App\Erp\Services\Navigation\ErpNavigation;
@@ -34,15 +39,18 @@ class ErpServiceProvider extends ServiceProvider
         $this->app->singleton(ErpAuthorization::class);
         $this->app->singleton(ErpNavigation::class);
         $this->app->singleton(ErpFormatter::class);
+        $this->app->singleton(StockService::class);
     }
 
     public function boot(): void
     {
         Relation::morphMap([
-            'erp_api_token' => \App\Erp\Models\ErpApiToken::class,
-            'erp_employee'  => Employee::class,
-            'erp_department'=> Department::class,
-            'erp_position'  => Position::class,
+            'erp_api_token'  => \App\Erp\Models\ErpApiToken::class,
+            'erp_employee'   => Employee::class,
+            'erp_department' => Department::class,
+            'erp_position'   => Position::class,
+            'erp_product'    => Product::class,
+            'erp_warehouse'  => Warehouse::class,
         ]);
 
         $this->loadViewsFrom(resource_path('views/erp'), 'erp');
@@ -73,6 +81,8 @@ class ErpServiceProvider extends ServiceProvider
         Gate::policy(Employee::class, EmployeePolicy::class);
         Gate::policy(Department::class, DepartmentPolicy::class);
         Gate::policy(Position::class, PositionPolicy::class);
+        Gate::policy(Product::class, ProductPolicy::class);
+        Gate::policy(Warehouse::class, WarehousePolicy::class);
 
         $catalog = $this->app->make(ErpPermissionCatalog::class);
 
