@@ -1,5 +1,6 @@
 <?php
 
+use App\Erp\Http\Controllers\Admin\AssetsController;
 use App\Erp\Http\Controllers\Admin\CustomersController;
 use App\Erp\Http\Controllers\Admin\DashboardController;
 use App\Erp\Http\Controllers\Admin\DepartmentsController;
@@ -75,5 +76,9 @@ Route::middleware(config('erp.routes.middleware', ['web']))
                 Route::put('projects/{project}/tasks/{task}',                    [ProjectTasksController::class, 'update'])->name('projects.tasks.update');
                 Route::patch('projects/{project}/tasks/{task}/status',           [ProjectTasksController::class, 'updateStatus'])->name('projects.tasks.update-status');
                 Route::delete('projects/{project}/tasks/{task}',                 [ProjectTasksController::class, 'destroy'])->name('projects.tasks.destroy');
+
+                // Assets Modülü
+                Route::resource('assets', AssetsController::class);
+                Route::post('assets/{asset}/depreciate', [AssetsController::class, 'depreciate'])->name('assets.depreciate');
             });
     });

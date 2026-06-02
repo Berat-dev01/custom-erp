@@ -12,10 +12,12 @@ use App\Erp\Models\Customer;
 use App\Erp\Models\Expense;
 use App\Erp\Models\Invoice;
 use App\Erp\Models\PurchaseOrder;
+use App\Erp\Models\Asset;
 use App\Erp\Models\Project;
 use App\Erp\Models\SalesOrder;
 use App\Erp\Models\Supplier;
 use App\Erp\Models\Warehouse;
+use App\Erp\Policies\AssetPolicy;
 use App\Erp\Policies\CustomerPolicy;
 use App\Erp\Policies\DepartmentPolicy;
 use App\Erp\Policies\EmployeePolicy;
@@ -28,6 +30,7 @@ use App\Erp\Policies\PurchaseOrderPolicy;
 use App\Erp\Policies\SalesOrderPolicy;
 use App\Erp\Policies\SupplierPolicy;
 use App\Erp\Policies\WarehousePolicy;
+use App\Erp\Services\Assets\DepreciationService;
 use App\Erp\Services\Finance\InvoiceService;
 use App\Erp\Services\Inventory\StockService;
 use App\Erp\Services\Payroll\PayrollService;
@@ -62,6 +65,7 @@ class ErpServiceProvider extends ServiceProvider
         $this->app->singleton(InvoiceService::class);
         $this->app->singleton(SalesOrderService::class);
         $this->app->singleton(PayrollService::class);
+        $this->app->singleton(DepreciationService::class);
     }
 
     public function boot(): void
@@ -80,6 +84,7 @@ class ErpServiceProvider extends ServiceProvider
             'erp_customer'       => Customer::class,
             'erp_sales_order'    => SalesOrder::class,
             'erp_project'        => Project::class,
+            'erp_asset'          => Asset::class,
         ]);
 
         $this->loadViewsFrom(resource_path('views/erp'), 'erp');
@@ -119,6 +124,7 @@ class ErpServiceProvider extends ServiceProvider
         Gate::policy(Customer::class, CustomerPolicy::class);
         Gate::policy(SalesOrder::class, SalesOrderPolicy::class);
         Gate::policy(Project::class, ProjectPolicy::class);
+        Gate::policy(Asset::class, AssetPolicy::class);
 
         $catalog = $this->app->make(ErpPermissionCatalog::class);
 
@@ -175,6 +181,11 @@ class ErpServiceProvider extends ServiceProvider
             $schedule->call(fn () => $this->app->make(InvoiceService::class)->markOverdueInvoices())
                 ->dailyAt('01:00')
                 ->name('erp:mark-overdue-invoices')
+                ->withoutOverlapping();
+
+            $schedule->call(fn () => $this->app->make(DepreciationService::class)->runMonthlyDepreciation())
+                ->monthlyOn(1, '02:00')
+                ->name('erp:run-monthly-depreciation')
                 ->withoutOverlapping();
         });
     }
