@@ -9,6 +9,8 @@ use App\Erp\Http\Controllers\Admin\InvoicesController;
 use App\Erp\Http\Controllers\Admin\PositionsController;
 use App\Erp\Http\Controllers\Admin\ProductsController;
 use App\Erp\Http\Controllers\Admin\PurchaseOrdersController;
+use App\Erp\Http\Controllers\Admin\PayrollRunsController;
+use App\Erp\Http\Controllers\Admin\PayslipsController;
 use App\Erp\Http\Controllers\Admin\SalesOrdersController;
 use App\Erp\Http\Controllers\Admin\StockMovementsController;
 use App\Erp\Http\Controllers\Admin\SuppliersController;
@@ -55,5 +57,13 @@ Route::middleware(config('erp.routes.middleware', ['web']))
                 Route::post('sales-orders/{sales_order}/deliver',        [SalesOrdersController::class, 'deliver'])->name('sales-orders.deliver');
                 Route::post('sales-orders/{sales_order}/cancel',         [SalesOrdersController::class, 'cancel'])->name('sales-orders.cancel');
                 Route::post('sales-orders/{sales_order}/create-invoice', [SalesOrdersController::class, 'createInvoice'])->name('sales-orders.create-invoice');
+
+                // Payroll Modülü
+                Route::resource('payroll-runs', PayrollRunsController::class)->only(['index', 'create', 'store', 'show']);
+                Route::post('payroll-runs/{payroll_run}/approve', [PayrollRunsController::class, 'approve'])->name('payroll-runs.approve');
+                Route::get('employees/{employee}/salary/create', [PayrollRunsController::class, 'salaryCreate'])->name('employees.salary.create');
+                Route::post('employees/{employee}/salary',        [PayrollRunsController::class, 'salaryStore'])->name('employees.salary.store');
+                Route::get('payslips/{payslip}',     [PayslipsController::class, 'show'])->name('payslips.show');
+                Route::get('payslips/{payslip}/pdf', [PayslipsController::class, 'pdf'])->name('payslips.pdf');
             });
     });

@@ -28,6 +28,7 @@ use App\Erp\Policies\SupplierPolicy;
 use App\Erp\Policies\WarehousePolicy;
 use App\Erp\Services\Finance\InvoiceService;
 use App\Erp\Services\Inventory\StockService;
+use App\Erp\Services\Payroll\PayrollService;
 use App\Erp\Services\Procurement\PurchaseOrderService;
 use App\Erp\Services\Sales\SalesOrderService;
 use App\Erp\Services\Authorization\ErpAuthorization;
@@ -58,6 +59,7 @@ class ErpServiceProvider extends ServiceProvider
         $this->app->singleton(PurchaseOrderService::class);
         $this->app->singleton(InvoiceService::class);
         $this->app->singleton(SalesOrderService::class);
+        $this->app->singleton(PayrollService::class);
     }
 
     public function boot(): void

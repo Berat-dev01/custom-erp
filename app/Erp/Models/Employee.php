@@ -54,4 +54,23 @@ class Employee extends Model
     {
         return $this->hasMany(EmployeeDocument::class, 'employee_id');
     }
+
+    public function salaries(): HasMany
+    {
+        return $this->hasMany(EmployeeSalary::class, 'employee_id');
+    }
+
+    public function currentSalary(): ?EmployeeSalary
+    {
+        return $this->salaries()
+            ->where('effective_from', '<=', today())
+            ->where(fn ($q) => $q->whereNull('effective_to')->orWhere('effective_to', '>=', today()))
+            ->orderByDesc('effective_from')
+            ->first();
+    }
+
+    public function payslips(): HasMany
+    {
+        return $this->hasMany(Payslip::class, 'employee_id');
+    }
 }
