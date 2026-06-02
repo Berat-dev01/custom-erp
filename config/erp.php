@@ -1,0 +1,225 @@
+<?php
+
+return [
+    'routes' => [
+        'admin_prefix' => env('ERP_ROUTE_PREFIX', 'admin/erp'),
+        'middleware'   => array_values(array_filter(array_map(
+            'trim',
+            explode(',', env('ERP_ROUTE_MIDDLEWARE', 'web'))
+        ))),
+    ],
+
+    'currency'        => env('ERP_CURRENCY', 'TRY'),
+    'currency_symbol' => env('ERP_CURRENCY_SYMBOL', '₺'),
+    'company_name'    => env('ERP_COMPANY_NAME', 'Company'),
+    'tax_rate'        => (float) env('ERP_TAX_RATE', 20),
+
+    'ai' => [
+        'enabled' => env('ERP_AI_ENABLED', false),
+        'driver'  => env('ERP_AI_DRIVER', 'null'),
+        'rate_limit_per_minute' => (int) env('ERP_AI_RATE_LIMIT_PER_MINUTE', 10),
+    ],
+
+    'api' => [
+        'rate_limit_per_minute' => (int) env('ERP_API_RATE_LIMIT_PER_MINUTE', 60),
+        'default_per_page'      => (int) env('ERP_API_DEFAULT_PER_PAGE', 20),
+        'max_per_page'          => (int) env('ERP_API_MAX_PER_PAGE', 100),
+    ],
+
+    'permissions' => [
+        'enabled' => env('ERP_PERMISSIONS_ENABLED', true),
+        'guard'   => env('ERP_PERMISSIONS_GUARD', 'web'),
+        'permissions' => [
+            'erp.dashboard.view',
+
+            'erp.employees.view',
+            'erp.employees.create',
+            'erp.employees.update',
+            'erp.employees.delete',
+            'erp.employees.export',
+
+            'erp.departments.view',
+            'erp.departments.create',
+            'erp.departments.update',
+            'erp.departments.delete',
+
+            'erp.positions.view',
+            'erp.positions.create',
+            'erp.positions.update',
+            'erp.positions.delete',
+
+            'erp.products.view',
+            'erp.products.create',
+            'erp.products.update',
+            'erp.products.delete',
+            'erp.products.export',
+
+            'erp.warehouses.view',
+            'erp.warehouses.create',
+            'erp.warehouses.update',
+            'erp.warehouses.delete',
+
+            'erp.stock_movements.view',
+            'erp.stock_movements.create',
+
+            'erp.suppliers.view',
+            'erp.suppliers.create',
+            'erp.suppliers.update',
+            'erp.suppliers.delete',
+
+            'erp.purchase_orders.view',
+            'erp.purchase_orders.create',
+            'erp.purchase_orders.update',
+            'erp.purchase_orders.delete',
+            'erp.purchase_orders.approve',
+            'erp.purchase_orders.receive',
+
+            'erp.customers.view',
+            'erp.customers.create',
+            'erp.customers.update',
+            'erp.customers.delete',
+
+            'erp.sales_orders.view',
+            'erp.sales_orders.create',
+            'erp.sales_orders.update',
+            'erp.sales_orders.delete',
+            'erp.sales_orders.confirm',
+            'erp.sales_orders.deliver',
+
+            'erp.invoices.view',
+            'erp.invoices.create',
+            'erp.invoices.update',
+            'erp.invoices.delete',
+            'erp.invoices.send',
+            'erp.invoices.export',
+
+            'erp.payments.view',
+            'erp.payments.create',
+
+            'erp.expenses.view',
+            'erp.expenses.create',
+            'erp.expenses.update',
+            'erp.expenses.delete',
+
+            'erp.payroll.view',
+            'erp.payroll.create',
+            'erp.payroll.update',
+            'erp.payroll.approve',
+
+            'erp.projects.view',
+            'erp.projects.create',
+            'erp.projects.update',
+            'erp.projects.delete',
+
+            'erp.assets.view',
+            'erp.assets.create',
+            'erp.assets.update',
+            'erp.assets.delete',
+
+            'erp.reports.view',
+            'erp.settings.manage',
+            'erp.users.manage',
+        ],
+        'roles' => [
+            'erp_admin' => [
+                'name'        => 'erp_admin',
+                'permissions' => ['*'],
+            ],
+            'erp_hr' => [
+                'name'        => 'erp_hr',
+                'permissions' => [
+                    'erp.dashboard.view',
+                    'erp.employees.view',
+                    'erp.employees.create',
+                    'erp.employees.update',
+                    'erp.employees.export',
+                    'erp.departments.view',
+                    'erp.departments.create',
+                    'erp.departments.update',
+                    'erp.positions.view',
+                    'erp.positions.create',
+                    'erp.positions.update',
+                    'erp.payroll.view',
+                    'erp.payroll.create',
+                    'erp.payroll.update',
+                ],
+            ],
+            'erp_finance' => [
+                'name'        => 'erp_finance',
+                'permissions' => [
+                    'erp.dashboard.view',
+                    'erp.invoices.view',
+                    'erp.invoices.create',
+                    'erp.invoices.update',
+                    'erp.invoices.send',
+                    'erp.invoices.export',
+                    'erp.payments.view',
+                    'erp.payments.create',
+                    'erp.expenses.view',
+                    'erp.expenses.create',
+                    'erp.expenses.update',
+                    'erp.purchase_orders.view',
+                    'erp.suppliers.view',
+                    'erp.reports.view',
+                ],
+            ],
+            'erp_inventory' => [
+                'name'        => 'erp_inventory',
+                'permissions' => [
+                    'erp.dashboard.view',
+                    'erp.products.view',
+                    'erp.products.create',
+                    'erp.products.update',
+                    'erp.products.export',
+                    'erp.warehouses.view',
+                    'erp.warehouses.create',
+                    'erp.warehouses.update',
+                    'erp.stock_movements.view',
+                    'erp.stock_movements.create',
+                    'erp.purchase_orders.view',
+                    'erp.purchase_orders.receive',
+                    'erp.suppliers.view',
+                ],
+            ],
+            'erp_sales' => [
+                'name'        => 'erp_sales',
+                'permissions' => [
+                    'erp.dashboard.view',
+                    'erp.customers.view',
+                    'erp.customers.create',
+                    'erp.customers.update',
+                    'erp.sales_orders.view',
+                    'erp.sales_orders.create',
+                    'erp.sales_orders.update',
+                    'erp.sales_orders.confirm',
+                    'erp.invoices.view',
+                    'erp.invoices.create',
+                    'erp.products.view',
+                ],
+            ],
+            'erp_viewer' => [
+                'name'        => 'erp_viewer',
+                'permissions' => [
+                    'erp.dashboard.view',
+                    'erp.employees.view',
+                    'erp.departments.view',
+                    'erp.positions.view',
+                    'erp.products.view',
+                    'erp.warehouses.view',
+                    'erp.stock_movements.view',
+                    'erp.suppliers.view',
+                    'erp.purchase_orders.view',
+                    'erp.customers.view',
+                    'erp.sales_orders.view',
+                    'erp.invoices.view',
+                    'erp.payments.view',
+                    'erp.expenses.view',
+                    'erp.payroll.view',
+                    'erp.projects.view',
+                    'erp.assets.view',
+                    'erp.reports.view',
+                ],
+            ],
+        ],
+    ],
+];

@@ -1,0 +1,24 @@
+{
+    "name": "sanalkopru/admin-panel",
+    "description": "Sanal Köprü Admin Panel Package",
+    "version": "1.0.0",
+    "type": "library",
+    "require": {
+        "php": "^8.1",
+        "laravel/framework": "^10.0|^11.0|^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Sanalkopru\\AdminPanel\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Sanalkopru\\AdminPanel\\AdminPanelServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
