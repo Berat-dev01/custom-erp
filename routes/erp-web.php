@@ -3,6 +3,8 @@
 use App\Erp\Http\Controllers\Admin\DashboardController;
 use App\Erp\Http\Controllers\Admin\DepartmentsController;
 use App\Erp\Http\Controllers\Admin\EmployeesController;
+use App\Erp\Http\Controllers\Admin\ExpensesController;
+use App\Erp\Http\Controllers\Admin\InvoicesController;
 use App\Erp\Http\Controllers\Admin\PositionsController;
 use App\Erp\Http\Controllers\Admin\ProductsController;
 use App\Erp\Http\Controllers\Admin\PurchaseOrdersController;
@@ -26,15 +28,22 @@ Route::middleware(config('erp.routes.middleware', ['web']))
                 Route::resource('positions',   PositionsController::class);
 
                 // Inventory Modülü
-                Route::resource('products',       ProductsController::class);
-                Route::resource('warehouses',     WarehousesController::class);
+                Route::resource('products',        ProductsController::class);
+                Route::resource('warehouses',      WarehousesController::class);
                 Route::resource('stock-movements', StockMovementsController::class)->only(['index', 'create', 'store']);
 
                 // Procurement Modülü
                 Route::resource('suppliers',       SuppliersController::class);
                 Route::resource('purchase-orders', PurchaseOrdersController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
-                Route::post('purchase-orders/{purchase_order}/approve',        [PurchaseOrdersController::class, 'approve'])->name('purchase-orders.approve');
-                Route::get('purchase-orders/{purchase_order}/receive',         [PurchaseOrdersController::class, 'receive'])->name('purchase-orders.receive');
+                Route::post('purchase-orders/{purchase_order}/approve',         [PurchaseOrdersController::class, 'approve'])->name('purchase-orders.approve');
+                Route::get('purchase-orders/{purchase_order}/receive',          [PurchaseOrdersController::class, 'receive'])->name('purchase-orders.receive');
                 Route::post('purchase-orders/{purchase_order}/store-receiving', [PurchaseOrdersController::class, 'storeReceiving'])->name('purchase-orders.store-receiving');
+
+                // Finance Modülü
+                Route::resource('invoices', InvoicesController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+                Route::post('invoices/{invoice}/send',         [InvoicesController::class, 'send'])->name('invoices.send');
+                Route::post('invoices/{invoice}/payments',     [InvoicesController::class, 'storePayment'])->name('invoices.payments.store');
+                Route::get('invoices/{invoice}/pdf',           [InvoicesController::class, 'downloadPdf'])->name('invoices.pdf');
+                Route::resource('expenses', ExpensesController::class)->except(['show']);
             });
     });

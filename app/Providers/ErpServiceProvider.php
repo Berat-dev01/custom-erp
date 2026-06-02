@@ -8,16 +8,21 @@ use App\Erp\Models\Department;
 use App\Erp\Models\Employee;
 use App\Erp\Models\Position;
 use App\Erp\Models\Product;
+use App\Erp\Models\Expense;
+use App\Erp\Models\Invoice;
 use App\Erp\Models\PurchaseOrder;
 use App\Erp\Models\Supplier;
 use App\Erp\Models\Warehouse;
 use App\Erp\Policies\DepartmentPolicy;
 use App\Erp\Policies\EmployeePolicy;
+use App\Erp\Policies\ExpensePolicy;
+use App\Erp\Policies\InvoicePolicy;
 use App\Erp\Policies\PositionPolicy;
 use App\Erp\Policies\ProductPolicy;
 use App\Erp\Policies\PurchaseOrderPolicy;
 use App\Erp\Policies\SupplierPolicy;
 use App\Erp\Policies\WarehousePolicy;
+use App\Erp\Services\Finance\InvoiceService;
 use App\Erp\Services\Inventory\StockService;
 use App\Erp\Services\Procurement\PurchaseOrderService;
 use App\Erp\Services\Authorization\ErpAuthorization;
@@ -46,6 +51,7 @@ class ErpServiceProvider extends ServiceProvider
         $this->app->singleton(ErpFormatter::class);
         $this->app->singleton(StockService::class);
         $this->app->singleton(PurchaseOrderService::class);
+        $this->app->singleton(InvoiceService::class);
     }
 
     public function boot(): void
@@ -59,6 +65,8 @@ class ErpServiceProvider extends ServiceProvider
             'erp_warehouse'      => Warehouse::class,
             'erp_supplier'       => Supplier::class,
             'erp_purchase_order' => PurchaseOrder::class,
+            'erp_invoice'        => Invoice::class,
+            'erp_expense'        => Expense::class,
         ]);
 
         $this->loadViewsFrom(resource_path('views/erp'), 'erp');
@@ -93,6 +101,8 @@ class ErpServiceProvider extends ServiceProvider
         Gate::policy(Warehouse::class, WarehousePolicy::class);
         Gate::policy(Supplier::class, SupplierPolicy::class);
         Gate::policy(PurchaseOrder::class, PurchaseOrderPolicy::class);
+        Gate::policy(Invoice::class, InvoicePolicy::class);
+        Gate::policy(Expense::class, ExpensePolicy::class);
 
         $catalog = $this->app->make(ErpPermissionCatalog::class);
 
@@ -144,7 +154,12 @@ class ErpServiceProvider extends ServiceProvider
     private function scheduleCommands(): void
     {
         $this->app->booted(function (): void {
-            // Scheduler görevleri ilerleyen fazlarda eklenecek
+            $schedule = $this->app->make(Schedule::class);
+
+            $schedule->call(fn () => $this->app->make(InvoiceService::class)->markOverdueInvoices())
+                ->dailyAt('01:00')
+                ->name('erp:mark-overdue-invoices')
+                ->withoutOverlapping();
         });
     }
 }
