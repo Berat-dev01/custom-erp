@@ -3,8 +3,10 @@
 use App\Http\Controllers\AdminAuthController;
 use Illuminate\Support\Facades\Route;
 
-Route::redirect('/', '/admin')->name('home');
 
+Route::get('/', function () {
+    return redirect('/admin/dashboard');
+});
 Route::prefix('admin')
     ->name('admin.')
     ->middleware('web')
