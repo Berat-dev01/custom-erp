@@ -1,8 +1,5 @@
 @extends('admin-panel::layouts.app')
 
-@push('styles')
-    @vite('resources/css/erp.css')
-@endpush
 
 @push('sidebar-nav')
     @if(!empty($erpNavigationGroups ?? []))
