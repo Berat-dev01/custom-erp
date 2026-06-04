@@ -5,7 +5,11 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::get('/', function () {
-    return redirect('/admin/dashboard');
+    return redirect('/admin/erp/dashboard');
+});
+
+Route::get('/admin', function () {
+    return redirect('/admin/erp/dashboard');
 });
 Route::prefix('admin')
     ->name('admin.')
