@@ -149,7 +149,7 @@ class ErpFullDemoSeeder extends Seeder
                     'start_date'    => $startDate,
                     'end_date'      => $endDate,
                     'days'          => $days,
-                    'reason'        => fake()->sentence(),
+                    'reason'        => 'İzin talebi.',
                     'status'        => $status,
                     'approved_by'   => $status === 'approved' ? $manager->id : null,
                     'approved_at'   => $status === 'approved' ? now() : null,

@@ -185,19 +185,29 @@ class ErpDemoSeeder extends Seeder
 
     private function seedEmployees(\Illuminate\Support\Collection $depts, \Illuminate\Support\Collection $positions, User $admin): array
     {
+        $firstNames = ['Ahmet', 'Mehmet', 'Ayşe', 'Fatma', 'Ali', 'Mustafa', 'Zeynep', 'Emine',
+                       'Hüseyin', 'İbrahim', 'Hatice', 'Elif', 'Ömer', 'Murat', 'Merve', 'Büşra',
+                       'Emre', 'Tolga', 'Selin', 'Derya', 'Serkan', 'Pınar', 'Kemal', 'Gül',
+                       'Yusuf', 'Hasan', 'Esra', 'Tuğba', 'Uğur', 'Caner'];
+        $lastNames  = ['Yılmaz', 'Kaya', 'Demir', 'Çelik', 'Şahin', 'Doğan', 'Kılıç', 'Arslan',
+                       'Taş', 'Aydın', 'Öztürk', 'Çetin', 'Koç', 'Kurt', 'Özdemir', 'Eren',
+                       'Aktaş', 'Polat', 'Güneş', 'Acar', 'Bulut', 'Korkmaz', 'Güler', 'Yıldız',
+                       'Çakır', 'Koçak', 'Özkan', 'Bal', 'Aksoy', 'Demirci'];
+
         $employees = [];
         $existing  = Employee::withTrashed()->count();
 
         for ($i = 0; $i < 50; $i++) {
-            $dept = $depts->random();
-            $pos  = $positions->where('department_id', $dept->id)->first() ?? $positions->first();
-
-            $hireDate = Carbon::now()->subDays(rand(30, 730)); // son 2 yıl içinde
+            $dept      = $depts->random();
+            $pos       = $positions->where('department_id', $dept->id)->first() ?? $positions->first();
+            $firstName = $firstNames[$i % count($firstNames)];
+            $lastName  = $lastNames[$i % count($lastNames)];
+            $hireDate  = Carbon::now()->subDays(rand(30, 730));
 
             $employees[] = Employee::create([
                 'employee_number' => 'DEMO-'.str_pad(++$existing, 5, '0', STR_PAD_LEFT),
-                'first_name'      => fake()->firstName(),
-                'last_name'       => fake()->lastName(),
+                'first_name'      => $firstName,
+                'last_name'       => $lastName,
                 'email'           => 'emp'.($existing).'@erp.demo',
                 'hire_date'       => $hireDate->format('Y-m-d'),
                 'employment_type' => 'full_time',
@@ -220,7 +230,7 @@ class ErpDemoSeeder extends Seeder
             $purchasePrice = rand(10, 1000);
             $product = Product::create([
                 'sku'            => 'DEMO-'.str_pad(++$existing, 6, '0', STR_PAD_LEFT),
-                'name'           => fake()->words(rand(2, 4), true),
+                'name'           => 'Ürün '.str_pad($existing, 6, '0', STR_PAD_LEFT),
                 'category_id'    => $categories->random()->id,
                 'unit_id'        => $unit->id,
                 'purchase_price' => $purchasePrice,
