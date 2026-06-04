@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Erp\Models\LeaveRequest;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
@@ -77,5 +78,15 @@ class Employee extends Model
     public function payslips(): HasMany
     {
         return $this->hasMany(Payslip::class, 'employee_id');
+    }
+
+    public function attendance(): HasMany
+    {
+        return $this->hasMany(Attendance::class, 'employee_id');
+    }
+
+    public function leaveRequests(): HasMany
+    {
+        return $this->hasMany(LeaveRequest::class, 'employee_id');
     }
 }

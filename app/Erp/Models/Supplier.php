@@ -11,6 +11,11 @@ class Supplier extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected static function newFactory(): \Database\Factories\Erp\SupplierFactory
+    {
+        return \Database\Factories\Erp\SupplierFactory::new();
+    }
+
     protected $table = 'erp_suppliers';
 
     protected $guarded = ['id'];
