@@ -13,9 +13,9 @@ class PositionFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'          => fake()->jobTitle(),
+            'name'          => $this->faker->jobTitle(),
             'department_id' => Department::factory(),
-            'level'         => fake()->randomElement(['intern', 'junior', 'mid', 'senior', 'lead', 'manager']),
+            'level'         => $this->faker->randomElement(['intern', 'junior', 'mid', 'senior', 'lead', 'manager']),
             'is_active'     => true,
         ];
     }

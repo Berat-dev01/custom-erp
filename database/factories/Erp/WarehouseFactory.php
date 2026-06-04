@@ -12,8 +12,8 @@ class WarehouseFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'       => fake()->city().' Depo',
-            'code'       => strtoupper(fake()->unique()->lexify('WH-???')),
+            'name'       => $this->faker->city().' Depo',
+            'code'       => strtoupper($this->faker->unique()->lexify('WH-???')),
             'is_default' => false,
             'is_active'  => true,
         ];

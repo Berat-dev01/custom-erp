@@ -12,9 +12,9 @@ class SupplierFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'               => fake()->company().' Ltd.',
-            'email'              => fake()->unique()->companyEmail(),
-            'phone'              => fake()->phoneNumber(),
+            'name'               => $this->faker->company().' Ltd.',
+            'email'              => $this->faker->unique()->companyEmail(),
+            'phone'              => $this->faker->phoneNumber(),
             'payment_terms_days' => 30,
             'status'             => 'active',
         ];

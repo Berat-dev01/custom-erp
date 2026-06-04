@@ -12,11 +12,11 @@ class CustomerFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'               => fake()->company(),
-            'email'              => fake()->unique()->companyEmail(),
-            'phone'              => fake()->phoneNumber(),
+            'name'               => $this->faker->company(),
+            'email'              => $this->faker->unique()->companyEmail(),
+            'phone'              => $this->faker->phoneNumber(),
             'payment_terms_days' => 30,
-            'credit_limit'       => fake()->randomFloat(2, 10000, 100000),
+            'credit_limit'       => $this->faker->randomFloat(2, 10000, 100000),
             'status'             => 'active',
         ];
     }
