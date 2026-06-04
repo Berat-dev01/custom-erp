@@ -12,10 +12,12 @@ class PositionFactory extends Factory
 
     public function definition(): array
     {
+        $faker = \Faker\Factory::create('tr_TR');
+
         return [
-            'name'          => $this->faker->jobTitle(),
+            'name'          => $faker->jobTitle(),
             'department_id' => Department::factory(),
-            'level'         => $this->faker->randomElement(['intern', 'junior', 'mid', 'senior', 'lead', 'manager']),
+            'level'         => $faker->randomElement(['intern', 'junior', 'mid', 'senior', 'lead', 'manager']),
             'is_active'     => true,
         ];
     }

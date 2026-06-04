@@ -11,10 +11,12 @@ class SupplierFactory extends Factory
 
     public function definition(): array
     {
+        $faker = \Faker\Factory::create('tr_TR');
+
         return [
-            'name'               => $this->faker->company().' Ltd.',
-            'email'              => $this->faker->unique()->companyEmail(),
-            'phone'              => $this->faker->phoneNumber(),
+            'name'               => $faker->company().' Ltd.',
+            'email'              => $faker->unique()->companyEmail(),
+            'phone'              => $faker->phoneNumber(),
             'payment_terms_days' => 30,
             'status'             => 'active',
         ];

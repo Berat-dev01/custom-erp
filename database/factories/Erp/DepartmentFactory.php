@@ -11,9 +11,11 @@ class DepartmentFactory extends Factory
 
     public function definition(): array
     {
+        $faker = \Faker\Factory::create('tr_TR');
+
         return [
-            'name'      => $this->faker->unique()->words(2, true).' Dept',
-            'code'      => strtoupper($this->faker->unique()->lexify('???')),
+            'name'      => $faker->unique()->words(2, true).' Dept',
+            'code'      => strtoupper($faker->unique()->lexify('???')),
             'is_active' => true,
         ];
     }

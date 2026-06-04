@@ -11,12 +11,14 @@ class CustomerFactory extends Factory
 
     public function definition(): array
     {
+        $faker = \Faker\Factory::create('tr_TR');
+
         return [
-            'name'               => $this->faker->company(),
-            'email'              => $this->faker->unique()->companyEmail(),
-            'phone'              => $this->faker->phoneNumber(),
+            'name'               => $faker->company(),
+            'email'              => $faker->unique()->companyEmail(),
+            'phone'              => $faker->phoneNumber(),
             'payment_terms_days' => 30,
-            'credit_limit'       => $this->faker->randomFloat(2, 10000, 100000),
+            'credit_limit'       => $faker->randomFloat(2, 10000, 100000),
             'status'             => 'active',
         ];
     }

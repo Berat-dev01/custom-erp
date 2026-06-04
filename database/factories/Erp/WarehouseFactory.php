@@ -11,9 +11,11 @@ class WarehouseFactory extends Factory
 
     public function definition(): array
     {
+        $faker = \Faker\Factory::create('tr_TR');
+
         return [
-            'name'       => $this->faker->city().' Depo',
-            'code'       => strtoupper($this->faker->unique()->lexify('WH-???')),
+            'name'       => $faker->city().' Depo',
+            'code'       => strtoupper($faker->unique()->lexify('WH-???')),
             'is_default' => false,
             'is_active'  => true,
         ];
