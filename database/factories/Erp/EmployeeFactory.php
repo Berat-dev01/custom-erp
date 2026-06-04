@@ -14,14 +14,13 @@ class EmployeeFactory extends Factory
     public function definition(): array
     {
         static $counter = 1;
-        $faker = \Faker\Factory::create('tr_TR');
 
         return [
             'employee_number' => 'EMP-'.str_pad($counter++, 5, '0', STR_PAD_LEFT),
-            'first_name'      => $faker->firstName(),
-            'last_name'       => $faker->lastName(),
-            'email'           => $faker->unique()->safeEmail(),
-            'hire_date'       => $faker->dateTimeBetween('-5 years', 'now')->format('Y-m-d'),
+            'first_name'      => 'Ahmet',
+            'last_name'       => 'Yılmaz',
+            'email'           => 'personel'.($counter - 1).'@erp.test',
+            'hire_date'       => '2023-01-15',
             'employment_type' => 'full_time',
             'status'          => 'active',
             'department_id'   => Department::factory(),
@@ -31,13 +30,9 @@ class EmployeeFactory extends Factory
 
     public function terminated(): static
     {
-        return $this->state(function () {
-            $faker = \Faker\Factory::create('tr_TR');
-
-            return [
-                'status'           => 'terminated',
-                'termination_date' => now()->subDays($faker->numberBetween(1, 30))->format('Y-m-d'),
-            ];
-        });
+        return $this->state(fn () => [
+            'status'           => 'terminated',
+            'termination_date' => '2024-06-30',
+        ]);
     }
 }

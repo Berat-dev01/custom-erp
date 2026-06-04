@@ -11,11 +11,11 @@ class UnitFactory extends Factory
 
     public function definition(): array
     {
-        $faker = \Faker\Factory::create('tr_TR');
+        static $counter = 1;
 
         return [
-            'name'         => $faker->unique()->word(),
-            'abbreviation' => strtolower($faker->unique()->lexify('??')),
+            'name'         => 'Birim '.$counter,
+            'abbreviation' => 'br'.str_pad($counter++, 2, '0', STR_PAD_LEFT),
         ];
     }
 }

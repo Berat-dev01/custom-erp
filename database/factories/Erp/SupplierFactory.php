@@ -11,12 +11,12 @@ class SupplierFactory extends Factory
 
     public function definition(): array
     {
-        $faker = \Faker\Factory::create('tr_TR');
+        static $counter = 1;
 
         return [
-            'name'               => $faker->company().' Ltd.',
-            'email'              => $faker->unique()->companyEmail(),
-            'phone'              => $faker->phoneNumber(),
+            'name'               => 'Tedarikçi Ltd. #'.$counter++,
+            'email'              => 'tedarik'.($counter - 1).'@ornek.com',
+            'phone'              => '0212 444 00 '.str_pad($counter - 1, 2, '0', STR_PAD_LEFT),
             'payment_terms_days' => 30,
             'status'             => 'active',
         ];
