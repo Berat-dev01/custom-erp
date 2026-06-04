@@ -3,7 +3,7 @@
 use App\Http\Controllers\AdminAuthController;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome')->name('home');
+Route::redirect('/', '/admin')->name('home');
 
 Route::prefix('admin')
     ->name('admin.')

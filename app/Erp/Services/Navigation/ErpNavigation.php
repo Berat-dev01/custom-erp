@@ -70,9 +70,11 @@ class ErpNavigation
                 'label' => __('İK'),
                 'icon'  => 'users',
                 'items' => [
-                    ['label' => __('Çalışanlar'),   'route' => 'erp.employees.index',  'permission' => 'erp.employees.view'],
-                    ['label' => __('Departmanlar'), 'route' => 'erp.departments.index', 'permission' => 'erp.departments.view'],
-                    ['label' => __('Pozisyonlar'),  'route' => 'erp.positions.index',   'permission' => 'erp.positions.view'],
+                    ['label' => __('Çalışanlar'),     'route' => 'erp.employees.index',      'permission' => 'erp.employees.view'],
+                    ['label' => __('Departmanlar'),   'route' => 'erp.departments.index',    'permission' => 'erp.departments.view'],
+                    ['label' => __('Pozisyonlar'),    'route' => 'erp.positions.index',      'permission' => 'erp.positions.view'],
+                    ['label' => __('İzin Talepleri'), 'route' => 'erp.leave-requests.index', 'permission' => 'erp.leave.view'],
+                    ['label' => __('Devam Çizelgesi'),'route' => 'erp.attendance.index',    'permission' => 'erp.attendance.view'],
                 ],
             ],
             [
@@ -124,6 +126,14 @@ class ErpNavigation
                 ],
             ],
             [
+                'label' => __('Üretim'),
+                'icon'  => 'factory',
+                'items' => [
+                    ['label' => __('Ürün Ağaçları'), 'route' => 'erp.boms.index',         'permission' => 'erp.manufacturing.view'],
+                    ['label' => __('İş Emirleri'),   'route' => 'erp.work-orders.index',  'permission' => 'erp.manufacturing.view'],
+                ],
+            ],
+            [
                 'label' => __('Sabit Kıymetler'),
                 'icon'  => 'building-2',
                 'items' => [
@@ -131,10 +141,43 @@ class ErpNavigation
                 ],
             ],
             [
+                'label' => __('Kasa & Banka'),
+                'icon'  => 'landmark',
+                'items' => [
+                    ['label' => __('Banka Hesapları'), 'route' => 'erp.bank-accounts.index', 'permission' => 'erp.bank.view'],
+                    ['label' => __('Çek/Senet'),       'route' => 'erp.checks.index',        'permission' => 'erp.bank.view'],
+                ],
+            ],
+            [
+                'label' => __('Muhasebe'),
+                'icon'  => 'book-open',
+                'items' => [
+                    ['label' => __('Hesap Planı'),     'route' => 'erp.accounts.index',        'permission' => 'erp.accounts.view'],
+                    ['label' => __('Yevmiye Fişleri'), 'route' => 'erp.journal-entries.index', 'permission' => 'erp.journal_entries.view'],
+                    ['label' => __('Mizan'),           'route' => 'erp.reports.trial-balance', 'permission' => 'erp.reports.view'],
+                    ['label' => __('Bilanço'),         'route' => 'erp.reports.balance-sheet', 'permission' => 'erp.reports.view'],
+                    ['label' => __('Gelir Tablosu'),   'route' => 'erp.reports.income-statement','permission' => 'erp.reports.view'],
+                    ['label' => __('KDV Raporu'),      'route' => 'erp.reports.tax-report',    'permission' => 'erp.reports.view'],
+                ],
+            ],
+            [
+                'label' => __('Raporlar'),
+                'icon'  => 'bar-chart-2',
+                'items' => [
+                    ['label' => __('Gelir / Gider'),   'route' => 'erp.reports.revenue',   'permission' => 'erp.reports.view'],
+                    ['label' => __('Stok Değeri'),      'route' => 'erp.reports.inventory', 'permission' => 'erp.reports.view'],
+                    ['label' => __('İK Özeti'),         'route' => 'erp.reports.hr',        'permission' => 'erp.reports.view'],
+                    ['label' => __('Yaşlandırma'),      'route' => 'erp.reports.aging',     'permission' => 'erp.reports.view'],
+                ],
+            ],
+            [
                 'label' => __('Sistem'),
                 'icon'  => 'settings',
                 'items' => [
-                    ['label' => __('Raporlar'), 'route' => 'erp.reports.index', 'permission' => 'erp.reports.view'],
+                    ['label' => __('Roller & Yetkiler'), 'route' => 'erp.roles.index',      'permission' => 'erp.users.manage'],
+                    ['label' => __('Para Birimleri'),    'route' => 'erp.currencies.index', 'permission' => 'erp.settings.manage'],
+                    ['label' => __('API Tokenleri'),     'route' => 'erp.api-tokens.index', 'permission' => 'erp.api.manage'],
+                    ['label' => __('Veri İçe Aktar'),   'route' => 'erp.import.index',     'permission' => 'erp.settings.manage'],
                 ],
             ],
         ];

@@ -20,6 +20,16 @@ return [
         'rate_limit_per_minute' => (int) env('ERP_AI_RATE_LIMIT_PER_MINUTE', 10),
     ],
 
+    'efatura' => [
+        'enabled'   => env('ERP_EFATURA_ENABLED', false),
+        'driver'    => env('ERP_EFATURA_DRIVER', 'null'),
+        'api_url'   => env('ERP_EFATURA_API_URL', ''),
+        'username'  => env('ERP_EFATURA_USERNAME', ''),
+        'password'  => env('ERP_EFATURA_PASSWORD', ''),
+        'vkn'       => env('ERP_EFATURA_VKN', ''),
+        'test_mode' => env('ERP_EFATURA_TEST', true),
+    ],
+
     'api' => [
         'rate_limit_per_minute' => (int) env('ERP_API_RATE_LIMIT_PER_MINUTE', 60),
         'default_per_page'      => (int) env('ERP_API_DEFAULT_PER_PAGE', 20),
@@ -111,19 +121,34 @@ return [
             'erp.projects.update',
             'erp.projects.delete',
 
+            'erp.manufacturing.view',
+            'erp.manufacturing.manage',
+
             'erp.assets.view',
             'erp.assets.create',
             'erp.assets.update',
             'erp.assets.delete',
 
+            'erp.accounts.view',
+            'erp.accounts.create',
+            'erp.journal_entries.view',
+            'erp.journal_entries.create',
+            'erp.bank.view',
+            'erp.bank.manage',
+            'erp.leave.view',
+            'erp.leave.create',
+            'erp.leave.approve',
+            'erp.attendance.view',
+            'erp.attendance.manage',
             'erp.reports.view',
+            'erp.api.manage',
             'erp.settings.manage',
             'erp.users.manage',
         ],
         'roles' => [
             'erp_admin' => [
                 'name'        => 'erp_admin',
-                'permissions' => ['*'],
+                'permissions' => ['*'],  // wildcard — ErpPermissionCatalog expands this
             ],
             'erp_hr' => [
                 'name'        => 'erp_hr',
@@ -215,9 +240,13 @@ return [
                     'erp.payments.view',
                     'erp.expenses.view',
                     'erp.payroll.view',
+                    'erp.leave.view',
+                    'erp.attendance.view',
                     'erp.projects.view',
                     'erp.assets.view',
                     'erp.reports.view',
+                    'erp.accounts.view',
+                    'erp.journal_entries.view',
                 ],
             ],
         ],

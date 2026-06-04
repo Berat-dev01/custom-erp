@@ -4,6 +4,38 @@ namespace App\Providers;
 
 use App\Erp\Http\Middleware\AuthenticateErpApi;
 use App\Erp\Http\Middleware\EnsureErpAccess;
+use App\Erp\Models\Department;
+use App\Erp\Models\Employee;
+use App\Erp\Models\Position;
+use App\Erp\Models\Product;
+use App\Erp\Models\Customer;
+use App\Erp\Models\Expense;
+use App\Erp\Models\Invoice;
+use App\Erp\Models\PurchaseOrder;
+use App\Erp\Models\Asset;
+use App\Erp\Models\Project;
+use App\Erp\Models\SalesOrder;
+use App\Erp\Models\Supplier;
+use App\Erp\Models\Warehouse;
+use App\Erp\Policies\AssetPolicy;
+use App\Erp\Policies\CustomerPolicy;
+use App\Erp\Policies\DepartmentPolicy;
+use App\Erp\Policies\EmployeePolicy;
+use App\Erp\Policies\ExpensePolicy;
+use App\Erp\Policies\InvoicePolicy;
+use App\Erp\Policies\PositionPolicy;
+use App\Erp\Policies\ProductPolicy;
+use App\Erp\Policies\ProjectPolicy;
+use App\Erp\Policies\PurchaseOrderPolicy;
+use App\Erp\Policies\SalesOrderPolicy;
+use App\Erp\Policies\SupplierPolicy;
+use App\Erp\Policies\WarehousePolicy;
+use App\Erp\Services\Assets\DepreciationService;
+use App\Erp\Services\Finance\InvoiceService;
+use App\Erp\Services\Inventory\StockService;
+use App\Erp\Services\Payroll\PayrollService;
+use App\Erp\Services\Procurement\PurchaseOrderService;
+use App\Erp\Services\Sales\SalesOrderService;
 use App\Erp\Services\Authorization\ErpAuthorization;
 use App\Erp\Services\Authorization\ErpPermissionCatalog;
 use App\Erp\Services\Navigation\ErpNavigation;
@@ -28,12 +60,40 @@ class ErpServiceProvider extends ServiceProvider
         $this->app->singleton(ErpAuthorization::class);
         $this->app->singleton(ErpNavigation::class);
         $this->app->singleton(ErpFormatter::class);
+        $this->app->singleton(StockService::class);
+        $this->app->singleton(PurchaseOrderService::class);
+        $this->app->singleton(InvoiceService::class);
+        $this->app->singleton(SalesOrderService::class);
+        $this->app->singleton(PayrollService::class);
+        $this->app->singleton(DepreciationService::class);
+        $this->app->singleton(\App\Erp\Services\Accounting\AccountingService::class);
+        $this->app->singleton(\App\Erp\Services\Payroll\TurkishPayrollCalculator::class);
+        $this->app->singleton(\App\Erp\Services\EFatura\EFaturaService::class);
+        $this->app->singleton(\App\Erp\Services\Currency\CurrencyService::class);
     }
 
     public function boot(): void
     {
         Relation::morphMap([
-            'erp_api_token' => \App\Erp\Models\ErpApiToken::class,
+            'erp_api_token'  => \App\Erp\Models\ErpApiToken::class,
+            'erp_employee'   => Employee::class,
+            'erp_department' => Department::class,
+            'erp_position'   => Position::class,
+            'erp_product'        => Product::class,
+            'erp_warehouse'      => Warehouse::class,
+            'erp_supplier'       => Supplier::class,
+            'erp_purchase_order' => PurchaseOrder::class,
+            'erp_invoice'        => Invoice::class,
+            'erp_expense'        => Expense::class,
+            'erp_customer'       => Customer::class,
+            'erp_sales_order'    => SalesOrder::class,
+            'erp_project'        => Project::class,
+            'erp_asset'              => Asset::class,
+            'erp_account'            => \App\Erp\Models\Account::class,
+            'erp_journal_entry'      => \App\Erp\Models\JournalEntry::class,
+            'erp_depreciation_entry' => \App\Erp\Models\DepreciationEntry::class,
+            'erp_payroll_run'        => \App\Erp\Models\PayrollRun::class,
+            'erp_payment'            => \App\Erp\Models\Payment::class,
         ]);
 
         $this->loadViewsFrom(resource_path('views/erp'), 'erp');
@@ -61,6 +121,20 @@ class ErpServiceProvider extends ServiceProvider
 
     private function registerAuthorization(): void
     {
+        Gate::policy(Employee::class, EmployeePolicy::class);
+        Gate::policy(Department::class, DepartmentPolicy::class);
+        Gate::policy(Position::class, PositionPolicy::class);
+        Gate::policy(Product::class, ProductPolicy::class);
+        Gate::policy(Warehouse::class, WarehousePolicy::class);
+        Gate::policy(Supplier::class, SupplierPolicy::class);
+        Gate::policy(PurchaseOrder::class, PurchaseOrderPolicy::class);
+        Gate::policy(Invoice::class, InvoicePolicy::class);
+        Gate::policy(Expense::class, ExpensePolicy::class);
+        Gate::policy(Customer::class, CustomerPolicy::class);
+        Gate::policy(SalesOrder::class, SalesOrderPolicy::class);
+        Gate::policy(Project::class, ProjectPolicy::class);
+        Gate::policy(Asset::class, AssetPolicy::class);
+
         $catalog = $this->app->make(ErpPermissionCatalog::class);
 
         foreach ($catalog->permissions() as $permission) {
@@ -111,7 +185,46 @@ class ErpServiceProvider extends ServiceProvider
     private function scheduleCommands(): void
     {
         $this->app->booted(function (): void {
-            // Scheduler görevleri ilerleyen fazlarda eklenecek
+            $schedule = $this->app->make(Schedule::class);
+
+            $schedule->call(fn () => $this->app->make(InvoiceService::class)->markOverdueInvoices())
+                ->dailyAt('01:00')
+                ->name('erp:mark-overdue-invoices')
+                ->withoutOverlapping();
+
+            $schedule->call(fn () => $this->app->make(DepreciationService::class)->runMonthlyDepreciation())
+                ->monthlyOn(1, '02:00')
+                ->name('erp:run-monthly-depreciation')
+                ->withoutOverlapping();
+
+            $schedule->job(new \App\Erp\Jobs\CheckEFaturaStatusJob())
+                ->everyFiveMinutes()
+                ->name('erp:check-efatura-status')
+                ->withoutOverlapping()
+                ->when(fn () => config('erp.efatura.enabled', false));
+
+            $schedule->call(fn () => $this->app->make(\App\Erp\Services\Currency\CurrencyService::class)->fetchTcmbRates())
+                ->weekdays()
+                ->at('09:30')
+                ->name('erp:fetch-tcmb-rates')
+                ->withoutOverlapping();
+
+            $notifService = fn () => $this->app->make(\App\Erp\Services\Notification\NotificationService::class);
+
+            $schedule->call(fn () => $notifService()->sendOverdueInvoiceAlerts())
+                ->dailyAt('08:00')
+                ->name('erp:overdue-invoice-alerts')
+                ->withoutOverlapping();
+
+            $schedule->call(fn () => $notifService()->sendLowStockAlerts())
+                ->dailyAt('08:05')
+                ->name('erp:low-stock-alerts')
+                ->withoutOverlapping();
+
+            $schedule->call(fn () => $notifService()->sendCheckDueDateAlerts())
+                ->dailyAt('08:10')
+                ->name('erp:check-due-alerts')
+                ->withoutOverlapping();
         });
     }
 }
