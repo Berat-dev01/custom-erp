@@ -8,103 +8,116 @@ use App\Erp\Models\Product;
 use App\Erp\Models\ProductCategory;
 use App\Erp\Models\Unit;
 use App\Erp\Models\Warehouse;
+use App\Erp\Services\Products\ProductQuery;
+use App\Erp\Support\ErpExportSchema;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
 
 class ProductsController extends Controller
 {
-    public function index(Request $request)
+    public function __construct(private readonly ProductQuery $products) {}
+
+    public function index(Request $request): View
     {
         Gate::authorize('viewAny', Product::class);
 
-        $query = Product::query()->with(['category', 'unit']);
-
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%")
-                  ->orWhere('barcode', 'like', "%{$search}%");
-            });
-        }
-
-        if ($categoryId = $request->input('category_id')) {
-            $query->where('category_id', $categoryId);
-        }
-
-        if ($type = $request->input('type')) {
-            $query->where('type', $type);
-        }
-
-        if ($request->input('low_stock')) {
-            $query->where('track_stock', true)
-                  ->where('reorder_point', '>', 0)
-                  ->whereHas('stockLevels', fn ($q) => $q->whereColumn('quantity', '<=', 'erp_products.reorder_point'));
-        }
-
-        $products   = $query->latest()->paginate(20)->withQueryString();
-        $categories = ProductCategory::where('is_active', true)->orderBy('name')->get();
-
-        return view('erp::admin.products.index', compact('products', 'categories'));
+        return view('erp::admin.products.index', [
+            'products'      => $this->products->paginate($request),
+            'filters'       => $this->products->filters($request),
+            'categories'    => ProductCategory::query()->orderBy('name')->pluck('name', 'id'),
+            'exportColumns' => ErpExportSchema::columns('products'),
+            'exportFormats' => ErpExportSchema::formats('products'),
+        ]);
     }
 
-    public function create()
+    public function create(): View
     {
         Gate::authorize('create', Product::class);
 
-        $categories = ProductCategory::where('is_active', true)->orderBy('name')->get();
-        $units      = Unit::orderBy('name')->get();
-
-        return view('erp::admin.products.create', compact('categories', 'units'));
+        return view('erp::admin.products.form', $this->formData(new Product));
     }
 
-    public function store(StoreProductRequest $request)
+    public function store(StoreProductRequest $request): RedirectResponse
     {
-        Product::create($request->validated());
+        $product = Product::create($request->validated());
 
-        return redirect()->route('erp.products.index')
-            ->with('success', __('Ürün eklendi.'));
+        return redirect()
+            ->route('erp.products.show', $product)
+            ->with('erp_status', __('Ürün eklendi.'));
     }
 
-    public function show(Product $product)
+    public function show(Product $product): View
     {
         Gate::authorize('view', $product);
 
         $product->load(['category', 'unit', 'stockLevels.warehouse']);
-        $recentMovements = $product->movements()
-            ->with(['warehouse', 'createdBy'])
-            ->latest()
-            ->limit(20)
-            ->get();
 
-        return view('erp::admin.products.show', compact('product', 'recentMovements'));
+        return view('erp::admin.products.show', compact('product'));
     }
 
-    public function edit(Product $product)
+    public function edit(Product $product): View
     {
         Gate::authorize('update', $product);
 
-        $categories = ProductCategory::where('is_active', true)->orderBy('name')->get();
-        $units      = Unit::orderBy('name')->get();
-
-        return view('erp::admin.products.edit', compact('product', 'categories', 'units'));
+        return view('erp::admin.products.form', $this->formData($product));
     }
 
-    public function update(UpdateProductRequest $request, Product $product)
+    public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
         $product->update($request->validated());
 
-        return redirect()->route('erp.products.show', $product)
-            ->with('success', __('Ürün güncellendi.'));
+        return redirect()
+            ->route('erp.products.show', $product)
+            ->with('erp_status', __('Ürün güncellendi.'));
     }
 
-    public function destroy(Product $product)
+    public function destroy(Product $product): RedirectResponse
     {
         Gate::authorize('delete', $product);
 
         $product->delete();
 
-        return redirect()->route('erp.products.index')
-            ->with('success', __('Ürün silindi.'));
+        return redirect()
+            ->route('erp.products.index')
+            ->with('erp_status', __('Ürün silindi.'));
+    }
+
+    public function bulkDelete(Request $request): RedirectResponse
+    {
+        Gate::authorize('erp.products.delete');
+
+        $validated = $request->validate([
+            'record_ids'   => ['required', 'array', 'min:1', 'max:500'],
+            'record_ids.*' => ['integer', 'exists:erp_products,id'],
+        ]);
+
+        $deleted = 0;
+        Product::query()
+            ->whereKey($validated['record_ids'])
+            ->chunkById(200, function ($products) use (&$deleted): void {
+                foreach ($products as $product) {
+                    $product->delete();
+                    $deleted++;
+                }
+            });
+
+        return back()->with('erp_status', trans_choice(
+            '{0} Hiçbiri silinemedi.|{1} :count ürün silindi.|[2,*] :count ürün silindi.',
+            $deleted, ['count' => $deleted]
+        ));
+    }
+
+    /** @return array<string, mixed> */
+    private function formData(Product $product): array
+    {
+        return [
+            'product'    => $product,
+            'categories' => ProductCategory::query()->orderBy('name')->pluck('name', 'id'),
+            'units'      => Unit::query()->orderBy('name')->pluck('abbreviation', 'id'),
+            'warehouses' => Warehouse::query()->orderBy('name')->pluck('name', 'id'),
+        ];
     }
 }

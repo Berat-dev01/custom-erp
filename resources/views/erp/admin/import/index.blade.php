@@ -4,9 +4,7 @@
 @section('page-title', __('Veri İçe Aktarma'))
 
 @section('content')
-    @if(session('success'))
-        <x-admin-panel::alert type="success" dismissible>{{ session('success') }}</x-admin-panel::alert>
-    @endif
+    @include('erp::admin.partials.status')
 
     @if(session('import_result'))
         @php $r = session('import_result'); @endphp

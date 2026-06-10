@@ -4,9 +4,7 @@
 @section('page-title', __('Bordro Çalıştırma'))
 
 @section('content')
-    @if(session('success'))
-        <x-admin-panel::alert type="success" dismissible>{{ session('success') }}</x-admin-panel::alert>
-    @endif
+    @include('erp::admin.partials.status')
 
     <div class="d-flex justify-content-end mb-3">
         @can('erp.payroll.create')

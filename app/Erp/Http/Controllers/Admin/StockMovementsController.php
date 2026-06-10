@@ -7,45 +7,29 @@ use App\Erp\Models\Product;
 use App\Erp\Models\StockMovement;
 use App\Erp\Models\Warehouse;
 use App\Erp\Services\Inventory\StockService;
+use App\Erp\Services\Manufacturing\StockMovementQuery;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
 
 class StockMovementsController extends Controller
 {
-    public function __construct(private readonly StockService $stockService) {}
+    public function __construct(
+        private readonly StockService $stockService,
+        private readonly StockMovementQuery $query,
+    ) {}
 
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         Gate::authorize('erp.stock_movements.view');
 
-        $query = StockMovement::query()->with(['product', 'warehouse', 'createdBy']);
-
-        if ($productId = $request->input('product_id')) {
-            $query->where('product_id', $productId);
-        }
-
-        if ($warehouseId = $request->input('warehouse_id')) {
-            $query->where('warehouse_id', $warehouseId);
-        }
-
-        if ($type = $request->input('type')) {
-            $query->where('type', $type);
-        }
-
-        if ($from = $request->input('date_from')) {
-            $query->whereDate('created_at', '>=', $from);
-        }
-
-        if ($to = $request->input('date_to')) {
-            $query->whereDate('created_at', '<=', $to);
-        }
-
-        $movements  = $query->latest()->paginate(20)->withQueryString();
-        $products   = Product::where('is_active', true)->orderBy('name')->get();
-        $warehouses = Warehouse::where('is_active', true)->orderBy('name')->get();
-
-        return view('erp::admin.stock-movements.index', compact('movements', 'products', 'warehouses'));
+        return view('erp::admin.stock-movements.index', [
+            'movements'  => $this->query->paginate($request),
+            'filters'    => $this->query->filters($request),
+            'products'   => Product::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'),
+            'warehouses' => Warehouse::query()->orderBy('name')->pluck('name', 'id'),
+        ]);
     }
 
     public function create()
@@ -66,6 +50,6 @@ class StockMovementsController extends Controller
         $this->stockService->recordMovement($data);
 
         return redirect()->route('erp.stock-movements.index')
-            ->with('success', __('Stok hareketi kaydedildi.'));
+            ->with('erp_status', __('Stok hareketi kaydedildi.'));
     }
 }

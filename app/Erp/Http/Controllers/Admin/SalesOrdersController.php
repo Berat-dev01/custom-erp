@@ -8,7 +8,11 @@ use App\Erp\Models\Product;
 use App\Erp\Models\SalesOrder;
 use App\Erp\Models\SalesOrderItem;
 use App\Erp\Models\Warehouse;
+use App\Erp\Services\Sales\SalesOrderQuery;
 use App\Erp\Services\Sales\SalesOrderService;
+use App\Erp\Support\ErpExportSchema;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
@@ -16,30 +20,22 @@ use Illuminate\Support\Facades\Gate;
 
 class SalesOrdersController extends Controller
 {
-    public function __construct(private readonly SalesOrderService $service) {}
+    public function __construct(
+        private readonly SalesOrderService $service,
+        private readonly SalesOrderQuery $query,
+    ) {}
 
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         Gate::authorize('viewAny', SalesOrder::class);
 
-        $query = SalesOrder::query()->with(['customer', 'warehouse']);
-
-        if ($status = $request->input('status')) {
-            $query->where('status', $status);
-        }
-
-        if ($customerId = $request->input('customer_id')) {
-            $query->where('customer_id', $customerId);
-        }
-
-        if ($from = $request->input('date_from')) {
-            $query->whereDate('order_date', '>=', $from);
-        }
-
-        $orders    = $query->latest()->paginate(20)->withQueryString();
-        $customers = Customer::where('status', 'active')->orderBy('name')->get();
-
-        return view('erp::admin.sales-orders.index', compact('orders', 'customers'));
+        return view('erp::admin.sales-orders.index', [
+            'orders'        => $this->query->paginate($request),
+            'filters'       => $this->query->filters($request),
+            'customers'     => Customer::query()->where('status', 'active')->orderBy('name')->pluck('name', 'id'),
+            'exportColumns' => ErpExportSchema::columns('sales-orders'),
+            'exportFormats' => ErpExportSchema::formats('sales-orders'),
+        ]);
     }
 
     public function create()
@@ -93,7 +89,7 @@ class SalesOrdersController extends Controller
         });
 
         return redirect()->route('erp.sales-orders.show', $order)
-            ->with('success', __('Satış siparişi oluşturuldu.'));
+            ->with('erp_status', __('Satış siparişi oluşturuldu.'));
     }
 
     public function show(SalesOrder $salesOrder)
@@ -105,14 +101,39 @@ class SalesOrdersController extends Controller
         return view('erp::admin.sales-orders.show', compact('salesOrder'));
     }
 
-    public function destroy(SalesOrder $salesOrder)
+    public function destroy(SalesOrder $salesOrder): RedirectResponse
     {
         Gate::authorize('delete', $salesOrder);
 
         $salesOrder->delete();
 
         return redirect()->route('erp.sales-orders.index')
-            ->with('success', __('Sipariş silindi.'));
+            ->with('erp_status', __('Sipariş silindi.'));
+    }
+
+    public function bulkDelete(Request $request): RedirectResponse
+    {
+        Gate::authorize('erp.sales-orders.delete');
+
+        $validated = $request->validate([
+            'record_ids'   => ['required', 'array', 'min:1', 'max:500'],
+            'record_ids.*' => ['integer', 'exists:erp_sales_orders,id'],
+        ]);
+
+        $deleted = 0;
+        SalesOrder::query()
+            ->whereKey($validated['record_ids'])
+            ->chunkById(200, function ($orders) use (&$deleted): void {
+                foreach ($orders as $order) {
+                    $order->delete();
+                    $deleted++;
+                }
+            });
+
+        return back()->with('erp_status', trans_choice(
+            '{0} Hiçbiri silinemedi.|{1} :count sipariş silindi.|[2,*] :count sipariş silindi.',
+            $deleted, ['count' => $deleted]
+        ));
     }
 
     public function confirm(SalesOrder $salesOrder)
@@ -122,7 +143,7 @@ class SalesOrdersController extends Controller
         $this->service->confirmOrder($salesOrder);
 
         return redirect()->route('erp.sales-orders.show', $salesOrder)
-            ->with('success', __('Sipariş onaylandı, stok rezerve edildi.'));
+            ->with('erp_status', __('Sipariş onaylandı, stok rezerve edildi.'));
     }
 
     public function deliver(SalesOrder $salesOrder)
@@ -132,7 +153,7 @@ class SalesOrdersController extends Controller
         $this->service->deliverOrder($salesOrder);
 
         return redirect()->route('erp.sales-orders.show', $salesOrder)
-            ->with('success', __('Sipariş teslim edildi, stok güncellendi.'));
+            ->with('erp_status', __('Sipariş teslim edildi, stok güncellendi.'));
     }
 
     public function cancel(SalesOrder $salesOrder)
@@ -142,7 +163,7 @@ class SalesOrdersController extends Controller
         $this->service->cancelOrder($salesOrder);
 
         return redirect()->route('erp.sales-orders.show', $salesOrder)
-            ->with('success', __('Sipariş iptal edildi.'));
+            ->with('erp_status', __('Sipariş iptal edildi.'));
     }
 
     public function createInvoice(SalesOrder $salesOrder)
@@ -154,6 +175,6 @@ class SalesOrdersController extends Controller
         $invoice = $this->service->createInvoice($salesOrder);
 
         return redirect()->route('erp.invoices.show', $invoice)
-            ->with('success', __('Fatura oluşturuldu.'));
+            ->with('erp_status', __('Fatura oluşturuldu.'));
     }
 }

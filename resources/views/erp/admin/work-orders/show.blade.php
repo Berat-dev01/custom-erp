@@ -4,9 +4,7 @@
 @section('page-title', $workOrder->wo_number)
 
 @section('content')
-    @if(session('success'))
-        <x-admin-panel::alert type="success" dismissible>{{ session('success') }}</x-admin-panel::alert>
-    @endif
+    @include('erp::admin.partials.status')
 
     <div class="mb-3">
         <x-admin-panel::button href="{{ route('erp.work-orders.index') }}" variant="ghost" icon="arrow-left" size="sm">{{ __('İş Emirlerine Dön') }}</x-admin-panel::button>

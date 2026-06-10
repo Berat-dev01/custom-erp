@@ -6,25 +6,28 @@ use App\Erp\Models\Bom;
 use App\Erp\Models\Warehouse;
 use App\Erp\Models\WorkOrder;
 use App\Erp\Services\Manufacturing\ManufacturingService;
+use App\Erp\Services\Manufacturing\WorkOrderQuery;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
 
 class WorkOrdersController extends Controller
 {
-    public function __construct(private ManufacturingService $service) {}
+    public function __construct(
+        private ManufacturingService $service,
+        private WorkOrderQuery $query,
+    ) {}
 
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         Gate::authorize('erp.manufacturing.view');
 
-        $query = WorkOrder::with(['product', 'warehouse', 'bom'])
-            ->when($request->get('status'), fn ($q, $v) => $q->where('status', $v))
-            ->latest();
-
-        $orders = $query->paginate(20)->withQueryString();
-
-        return view('erp::admin.work-orders.index', compact('orders'));
+        return view('erp::admin.work-orders.index', [
+            'orders'  => $this->query->paginate($request),
+            'filters' => $this->query->filters($request),
+        ]);
     }
 
     public function create()
@@ -60,7 +63,7 @@ class WorkOrdersController extends Controller
             'created_by' => $request->user()->id,
         ]);
 
-        return redirect()->route('erp.work-orders.index')->with('success', __('İş emri oluşturuldu.'));
+        return redirect()->route('erp.work-orders.index')->with('erp_status', __('İş emri oluşturuldu.'));
     }
 
     public function show(WorkOrder $workOrder)
@@ -78,7 +81,7 @@ class WorkOrdersController extends Controller
 
         $this->service->releaseWorkOrder($workOrder);
 
-        return back()->with('success', __('İş emri serbest bırakıldı, hammaddeler rezerve edildi.'));
+        return back()->with('erp_status', __('İş emri serbest bırakıldı, hammaddeler rezerve edildi.'));
     }
 
     public function complete(Request $request, WorkOrder $workOrder)
@@ -91,7 +94,7 @@ class WorkOrdersController extends Controller
 
         $this->service->completeWorkOrder($workOrder, (float) $data['produced_quantity']);
 
-        return back()->with('success', __('İş emri tamamlandı, stok güncellendi.'));
+        return back()->with('erp_status', __('İş emri tamamlandı, stok güncellendi.'));
     }
 
     public function cancel(WorkOrder $workOrder)
@@ -102,10 +105,10 @@ class WorkOrdersController extends Controller
 
         $workOrder->update(['status' => 'cancelled']);
 
-        return back()->with('success', __('İş emri iptal edildi.'));
+        return back()->with('erp_status', __('İş emri iptal edildi.'));
     }
 
-    public function destroy(WorkOrder $workOrder)
+    public function destroy(WorkOrder $workOrder): RedirectResponse
     {
         Gate::authorize('erp.manufacturing.manage');
 
@@ -113,6 +116,32 @@ class WorkOrdersController extends Controller
 
         $workOrder->delete();
 
-        return redirect()->route('erp.work-orders.index')->with('success', __('İş emri silindi.'));
+        return redirect()->route('erp.work-orders.index')->with('erp_status', __('İş emri silindi.'));
+    }
+
+    public function bulkDelete(Request $request): RedirectResponse
+    {
+        Gate::authorize('erp.manufacturing.manage');
+
+        $validated = $request->validate([
+            'record_ids'   => ['required', 'array', 'min:1', 'max:500'],
+            'record_ids.*' => ['integer', 'exists:erp_work_orders,id'],
+        ]);
+
+        $deleted = 0;
+        WorkOrder::query()
+            ->whereKey($validated['record_ids'])
+            ->where('status', 'draft')
+            ->chunkById(200, function ($orders) use (&$deleted): void {
+                foreach ($orders as $order) {
+                    $order->delete();
+                    $deleted++;
+                }
+            });
+
+        return back()->with('erp_status', trans_choice(
+            '{0} Hiçbiri silinemedi.|{1} :count iş emri silindi.|[2,*] :count iş emri silindi.',
+            $deleted, ['count' => $deleted]
+        ));
     }
 }

@@ -4,9 +4,7 @@
 @section('page-title', __('Yevmiye Fişleri'))
 
 @section('content')
-    @if(session('success'))
-        <x-admin-panel::alert type="success" dismissible>{{ session('success') }}</x-admin-panel::alert>
-    @endif
+    @include('erp::admin.partials.status')
 
     <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
         <form method="GET" action="{{ route('erp.journal-entries.index') }}" class="d-flex gap-2 flex-wrap">

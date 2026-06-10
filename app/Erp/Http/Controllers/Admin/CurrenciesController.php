@@ -41,7 +41,7 @@ class CurrenciesController extends Controller
             'code' => strtoupper($data['code']),
         ]));
 
-        return back()->with('success', __('Para birimi eklendi.'));
+        return back()->with('erp_status', __('Para birimi eklendi.'));
     }
 
     public function storeRate(Request $request)
@@ -61,7 +61,7 @@ class CurrenciesController extends Controller
             \Illuminate\Support\Carbon::parse($data['rate_date'])
         );
 
-        return back()->with('success', __('Kur kaydedildi.'));
+        return back()->with('erp_status', __('Kur kaydedildi.'));
     }
 
     public function fetchTcmb()
@@ -70,6 +70,6 @@ class CurrenciesController extends Controller
 
         $saved = $this->currencyService->fetchTcmbRates();
 
-        return back()->with('success', __(':count kur TCMB\'den güncellendi.', ['count' => $saved]));
+        return back()->with('erp_status', __(':count kur TCMB\'den güncellendi.', ['count' => $saved]));
     }
 }

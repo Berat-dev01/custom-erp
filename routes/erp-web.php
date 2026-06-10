@@ -3,6 +3,7 @@
 use App\Erp\Http\Controllers\Admin\AccountsController;
 use App\Erp\Http\Controllers\Admin\ApiTokensController;
 use App\Erp\Http\Controllers\Admin\BomsController;
+use App\Erp\Http\Controllers\Admin\DataTransferController;
 use App\Erp\Http\Controllers\Admin\ExportController;
 use App\Erp\Http\Controllers\Admin\CurrenciesController;
 use App\Erp\Http\Controllers\Admin\RolesController;
@@ -44,9 +45,13 @@ Route::middleware(config('erp.routes.middleware', ['web']))
                 Route::get('/', fn () => redirect()->route('erp.dashboard'))->name('home');
                 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-                // HR Modülü
+                // HR Modülü — bulk/export BEFORE resource to avoid route binding conflicts
+                Route::delete('employees/bulk', [EmployeesController::class, 'bulkDelete'])->name('employees.bulk-delete');
+                Route::post('employees/export', [DataTransferController::class, 'export'])->defaults('module', 'employees')->name('employees.export');
                 Route::resource('employees',   EmployeesController::class);
+                Route::delete('departments/bulk', [DepartmentsController::class, 'bulkDelete'])->name('departments.bulk-delete');
                 Route::resource('departments', DepartmentsController::class);
+                Route::delete('positions/bulk', [PositionsController::class, 'bulkDelete'])->name('positions.bulk-delete');
                 Route::resource('positions',   PositionsController::class);
 
                 // İzin & Devam Modülü
@@ -59,28 +64,43 @@ Route::middleware(config('erp.routes.middleware', ['web']))
                 Route::get('attendance/{employee}/monthly-report',        [AttendanceController::class, 'monthlyReport'])->name('attendance.monthly-report');
 
                 // Inventory Modülü
+                Route::delete('products/bulk', [ProductsController::class, 'bulkDelete'])->name('products.bulk-delete');
+                Route::post('products/export', [DataTransferController::class, 'export'])->defaults('module', 'products')->name('products.export');
                 Route::resource('products',        ProductsController::class);
+                Route::delete('warehouses/bulk', [WarehousesController::class, 'bulkDelete'])->name('warehouses.bulk-delete');
                 Route::resource('warehouses',      WarehousesController::class);
                 Route::resource('stock-movements', StockMovementsController::class)->only(['index', 'create', 'store']);
 
                 // Procurement Modülü
+                Route::delete('suppliers/bulk', [SuppliersController::class, 'bulkDelete'])->name('suppliers.bulk-delete');
+                Route::post('suppliers/export', [DataTransferController::class, 'export'])->defaults('module', 'suppliers')->name('suppliers.export');
                 Route::resource('suppliers',       SuppliersController::class);
+                Route::delete('purchase-orders/bulk', [PurchaseOrdersController::class, 'bulkDelete'])->name('purchase-orders.bulk-delete');
+                Route::post('purchase-orders/export', [DataTransferController::class, 'export'])->defaults('module', 'purchase-orders')->name('purchase-orders.export');
                 Route::resource('purchase-orders', PurchaseOrdersController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
                 Route::post('purchase-orders/{purchase_order}/approve',         [PurchaseOrdersController::class, 'approve'])->name('purchase-orders.approve');
                 Route::get('purchase-orders/{purchase_order}/receive',          [PurchaseOrdersController::class, 'receive'])->name('purchase-orders.receive');
                 Route::post('purchase-orders/{purchase_order}/store-receiving', [PurchaseOrdersController::class, 'storeReceiving'])->name('purchase-orders.store-receiving');
 
                 // Finance Modülü
+                Route::delete('invoices/bulk', [InvoicesController::class, 'bulkDelete'])->name('invoices.bulk-delete');
+                Route::post('invoices/export', [DataTransferController::class, 'export'])->defaults('module', 'invoices')->name('invoices.export');
                 Route::resource('invoices', InvoicesController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
                 Route::post('invoices/{invoice}/send',         [InvoicesController::class, 'send'])->name('invoices.send');
                 Route::post('invoices/{invoice}/payments',     [InvoicesController::class, 'storePayment'])->name('invoices.payments.store');
                 Route::get('invoices/{invoice}/pdf',           [InvoicesController::class, 'downloadPdf'])->name('invoices.pdf');
                 Route::post('invoices/{invoice}/send-efatura', [InvoicesController::class, 'sendEfatura'])->name('invoices.send-efatura');
                 Route::post('invoices/{invoice}/cancel-efatura',[InvoicesController::class, 'cancelEfatura'])->name('invoices.cancel-efatura');
+                Route::delete('expenses/bulk', [ExpensesController::class, 'bulkDelete'])->name('expenses.bulk-delete');
+                Route::post('expenses/export', [DataTransferController::class, 'export'])->defaults('module', 'expenses')->name('expenses.export');
                 Route::resource('expenses', ExpensesController::class)->except(['show']);
 
                 // Sales Modülü
+                Route::delete('customers/bulk', [CustomersController::class, 'bulkDelete'])->name('customers.bulk-delete');
+                Route::post('customers/export', [DataTransferController::class, 'export'])->defaults('module', 'customers')->name('customers.export');
                 Route::resource('customers',   CustomersController::class);
+                Route::delete('sales-orders/bulk', [SalesOrdersController::class, 'bulkDelete'])->name('sales-orders.bulk-delete');
+                Route::post('sales-orders/export', [DataTransferController::class, 'export'])->defaults('module', 'sales-orders')->name('sales-orders.export');
                 Route::resource('sales-orders', SalesOrdersController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
                 Route::post('sales-orders/{sales_order}/confirm',        [SalesOrdersController::class, 'confirm'])->name('sales-orders.confirm');
                 Route::post('sales-orders/{sales_order}/deliver',        [SalesOrdersController::class, 'deliver'])->name('sales-orders.deliver');
@@ -97,6 +117,8 @@ Route::middleware(config('erp.routes.middleware', ['web']))
                 Route::get('payslips/{payslip}/pdf', [PayslipsController::class, 'pdf'])->name('payslips.pdf');
 
                 // Projects Modülü
+                Route::delete('projects/bulk', [ProjectsController::class, 'bulkDelete'])->name('projects.bulk-delete');
+                Route::post('projects/export', [DataTransferController::class, 'export'])->defaults('module', 'projects')->name('projects.export');
                 Route::resource('projects', ProjectsController::class);
                 Route::post('projects/{project}/time-entries', [ProjectsController::class, 'storeTimeEntry'])->name('projects.time-entries.store');
                 Route::post('projects/{project}/tasks',                          [ProjectTasksController::class, 'store'])->name('projects.tasks.store');
@@ -105,11 +127,15 @@ Route::middleware(config('erp.routes.middleware', ['web']))
                 Route::delete('projects/{project}/tasks/{task}',                 [ProjectTasksController::class, 'destroy'])->name('projects.tasks.destroy');
 
                 // Assets Modülü
+                Route::delete('assets/bulk', [AssetsController::class, 'bulkDelete'])->name('assets.bulk-delete');
+                Route::post('assets/export', [DataTransferController::class, 'export'])->defaults('module', 'assets')->name('assets.export');
                 Route::resource('assets', AssetsController::class);
                 Route::post('assets/{asset}/depreciate', [AssetsController::class, 'depreciate'])->name('assets.depreciate');
 
                 // Üretim Modülü
+                Route::delete('boms/bulk', [BomsController::class, 'bulkDelete'])->name('boms.bulk-delete');
                 Route::resource('boms', BomsController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+                Route::delete('work-orders/bulk', [WorkOrdersController::class, 'bulkDelete'])->name('work-orders.bulk-delete');
                 Route::resource('work-orders', WorkOrdersController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
                 Route::patch('work-orders/{work_order}/release',  [WorkOrdersController::class, 'release'])->name('work-orders.release');
                 Route::patch('work-orders/{work_order}/complete', [WorkOrdersController::class, 'complete'])->name('work-orders.complete');

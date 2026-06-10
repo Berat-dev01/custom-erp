@@ -4,9 +4,7 @@
 @section('page-title', $employee->full_name)
 
 @section('content')
-    @if(session('success'))
-        <x-admin-panel::alert type="success" dismissible>{{ session('success') }}</x-admin-panel::alert>
-    @endif
+    @include('erp::admin.partials.status')
 
     <div class="d-flex gap-2 mb-3">
         @can('erp.employees.update')

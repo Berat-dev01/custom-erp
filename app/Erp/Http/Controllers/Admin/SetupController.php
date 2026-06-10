@@ -40,7 +40,7 @@ class SetupController extends Controller
 
         ErpSetting::updateOrCreate(['id' => 1], array_merge($data, ['setup_completed' => false]));
 
-        return redirect()->route('erp.setup')->with('step', 2)->with('success', __('Şirket bilgileri kaydedildi.'));
+        return redirect()->route('erp.setup')->with('step', 2)->with('erp_status', __('Şirket bilgileri kaydedildi.'));
     }
 
     private function handleStep2(Request $request)
@@ -53,7 +53,7 @@ class SetupController extends Controller
 
         ErpSetting::updateOrCreate(['id' => 1], array_merge($data, ['setup_completed' => true]));
 
-        return redirect()->route('erp.dashboard')->with('success', __('Kurulum tamamlandı! ERP\'ye hoş geldiniz.'));
+        return redirect()->route('erp.dashboard')->with('erp_status', __('Kurulum tamamlandı! ERP\'ye hoş geldiniz.'));
     }
 
     private function isCompleted(): bool

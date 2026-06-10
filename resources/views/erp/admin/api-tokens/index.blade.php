@@ -4,9 +4,7 @@
 @section('page-title', __('API Tokenleri'))
 
 @section('content')
-    @if(session('success'))
-        <x-admin-panel::alert type="success" dismissible>{{ session('success') }}</x-admin-panel::alert>
-    @endif
+    @include('erp::admin.partials.status')
 
     @if(session('new_token'))
         <x-admin-panel::alert type="warning" class="mb-4">

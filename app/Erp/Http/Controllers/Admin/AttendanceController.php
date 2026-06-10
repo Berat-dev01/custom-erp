@@ -54,7 +54,7 @@ class AttendanceController extends Controller
             [...$data, 'work_hours' => $workHours]
         );
 
-        return back()->with('success', __('Devam kaydı güncellendi.'));
+        return back()->with('erp_status', __('Devam kaydı güncellendi.'));
     }
 
     public function monthlyReport(Request $request, Employee $employee)

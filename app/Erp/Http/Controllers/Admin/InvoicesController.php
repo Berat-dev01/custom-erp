@@ -7,7 +7,11 @@ use App\Erp\Http\Requests\StorePaymentRequest;
 use App\Erp\Models\Invoice;
 use App\Erp\Models\InvoiceItem;
 use App\Erp\Models\Product;
+use App\Erp\Services\Finance\InvoiceQuery;
 use App\Erp\Services\Finance\InvoiceService;
+use App\Erp\Support\ErpExportSchema;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
@@ -15,33 +19,21 @@ use Illuminate\Support\Facades\Gate;
 
 class InvoicesController extends Controller
 {
-    public function __construct(private readonly InvoiceService $service) {}
+    public function __construct(
+        private readonly InvoiceService $service,
+        private readonly InvoiceQuery $query,
+    ) {}
 
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         Gate::authorize('viewAny', Invoice::class);
 
-        $query = Invoice::query()->with('invoiceable');
-
-        if ($status = $request->input('status')) {
-            $query->where('status', $status);
-        }
-
-        if ($type = $request->input('type')) {
-            $query->where('type', $type);
-        }
-
-        if ($from = $request->input('date_from')) {
-            $query->whereDate('issue_date', '>=', $from);
-        }
-
-        if ($to = $request->input('date_to')) {
-            $query->whereDate('issue_date', '<=', $to);
-        }
-
-        $invoices = $query->latest()->paginate(20)->withQueryString();
-
-        return view('erp::admin.invoices.index', compact('invoices'));
+        return view('erp::admin.invoices.index', [
+            'invoices'      => $this->query->paginate($request),
+            'filters'       => $this->query->filters($request),
+            'exportColumns' => ErpExportSchema::columns('invoices'),
+            'exportFormats' => ErpExportSchema::formats('invoices'),
+        ]);
     }
 
     public function create()
@@ -97,7 +89,7 @@ class InvoicesController extends Controller
         });
 
         return redirect()->route('erp.invoices.show', $invoice)
-            ->with('success', __('Fatura oluşturuldu.'));
+            ->with('erp_status', __('Fatura oluşturuldu.'));
     }
 
     public function show(Invoice $invoice)
@@ -116,7 +108,7 @@ class InvoicesController extends Controller
         $invoice->delete();
 
         return redirect()->route('erp.invoices.index')
-            ->with('success', __('Fatura silindi.'));
+            ->with('erp_status', __('Fatura silindi.'));
     }
 
     public function send(Invoice $invoice)
@@ -132,7 +124,7 @@ class InvoicesController extends Controller
         app(\App\Erp\Services\EFatura\EFaturaService::class)->processInvoice($fresh);
 
         return redirect()->route('erp.invoices.show', $invoice)
-            ->with('success', __('Fatura gönderildi olarak işaretlendi.'));
+            ->with('erp_status', __('Fatura gönderildi olarak işaretlendi.'));
     }
 
     public function storePayment(StorePaymentRequest $request, Invoice $invoice)
@@ -142,7 +134,7 @@ class InvoicesController extends Controller
         $this->service->recordPayment($invoice, $request->validated());
 
         return redirect()->route('erp.invoices.show', $invoice)
-            ->with('success', __('Ödeme kaydedildi.'));
+            ->with('erp_status', __('Ödeme kaydedildi.'));
     }
 
     public function downloadPdf(Invoice $invoice)
@@ -165,7 +157,7 @@ class InvoicesController extends Controller
 
         if (! $service->isEnabled()) {
             return redirect()->route('erp.invoices.show', $invoice)
-                ->with('error', __('e-Fatura modülü aktif değil. Lütfen .env ayarlarını kontrol edin.'));
+                ->with('erp_status', __('e-Fatura modülü aktif değil. Lütfen .env ayarlarını kontrol edin.'));
         }
 
         $result = $service->processInvoice($invoice);
@@ -173,10 +165,10 @@ class InvoicesController extends Controller
         $message = $result ? __('e-Fatura gönderildi.') : __('e-Fatura gönderilemedi. Lütfen tekrar deneyin.');
 
         return redirect()->route('erp.invoices.show', $invoice)
-            ->with($result ? 'success' : 'error', $message);
+            ->with('erp_status', $message);
     }
 
-    public function cancelEfatura(Invoice $invoice)
+    public function cancelEfatura(Invoice $invoice): RedirectResponse
     {
         Gate::authorize('erp.invoices.update');
 
@@ -184,12 +176,37 @@ class InvoicesController extends Controller
 
         if (! $service->isEnabled()) {
             return redirect()->route('erp.invoices.show', $invoice)
-                ->with('error', __('e-Fatura modülü aktif değil.'));
+                ->with('erp_status', __('e-Fatura modülü aktif değil.'));
         }
 
         $success = $service->cancelInvoice($invoice);
 
         return redirect()->route('erp.invoices.show', $invoice)
-            ->with($success ? 'success' : 'error', $success ? __('e-Fatura iptal edildi.') : __('e-Fatura iptal edilemedi.'));
+            ->with('erp_status', $success ? __('e-Fatura iptal edildi.') : __('e-Fatura iptal edilemedi.'));
+    }
+
+    public function bulkDelete(Request $request): RedirectResponse
+    {
+        Gate::authorize('erp.invoices.delete');
+
+        $validated = $request->validate([
+            'record_ids'   => ['required', 'array', 'min:1', 'max:500'],
+            'record_ids.*' => ['integer', 'exists:erp_invoices,id'],
+        ]);
+
+        $deleted = 0;
+        Invoice::query()
+            ->whereKey($validated['record_ids'])
+            ->chunkById(200, function ($invoices) use (&$deleted): void {
+                foreach ($invoices as $invoice) {
+                    $invoice->delete();
+                    $deleted++;
+                }
+            });
+
+        return back()->with('erp_status', trans_choice(
+            '{0} Hiçbiri silinemedi.|{1} :count fatura silindi.|[2,*] :count fatura silindi.',
+            $deleted, ['count' => $deleted]
+        ));
     }
 }

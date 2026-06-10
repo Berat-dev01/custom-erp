@@ -5,7 +5,10 @@ namespace App\Erp\Http\Controllers\Admin;
 use App\Erp\Models\Bom;
 use App\Erp\Models\BomComponent;
 use App\Erp\Models\Product;
+use App\Erp\Services\Manufacturing\BomQuery;
 use App\Erp\Services\Manufacturing\ManufacturingService;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
@@ -13,15 +16,19 @@ use Illuminate\Support\Facades\Gate;
 
 class BomsController extends Controller
 {
-    public function __construct(private ManufacturingService $service) {}
+    public function __construct(
+        private ManufacturingService $service,
+        private BomQuery $query,
+    ) {}
 
-    public function index()
+    public function index(Request $request): View
     {
         Gate::authorize('erp.manufacturing.view');
 
-        $boms = Bom::with('product')->latest()->paginate(20);
-
-        return view('erp::admin.boms.index', compact('boms'));
+        return view('erp::admin.boms.index', [
+            'boms'    => $this->query->paginate($request),
+            'filters' => $this->query->filters($request),
+        ]);
     }
 
     public function create()
@@ -67,7 +74,7 @@ class BomsController extends Controller
             }
         });
 
-        return redirect()->route('erp.boms.index')->with('success', __('BOM oluşturuldu.'));
+        return redirect()->route('erp.boms.index')->with('erp_status', __('BOM oluşturuldu.'));
     }
 
     public function show(Bom $bom)
@@ -80,7 +87,7 @@ class BomsController extends Controller
         return view('erp::admin.boms.show', compact('bom', 'cost'));
     }
 
-    public function destroy(Bom $bom)
+    public function destroy(Bom $bom): RedirectResponse
     {
         Gate::authorize('erp.manufacturing.manage');
 
@@ -88,6 +95,38 @@ class BomsController extends Controller
 
         $bom->delete();
 
-        return redirect()->route('erp.boms.index')->with('success', __('BOM silindi.'));
+        return redirect()->route('erp.boms.index')->with('erp_status', __('BOM silindi.'));
+    }
+
+    public function bulkDelete(Request $request): RedirectResponse
+    {
+        Gate::authorize('erp.manufacturing.manage');
+
+        $validated = $request->validate([
+            'record_ids'   => ['required', 'array', 'min:1', 'max:500'],
+            'record_ids.*' => ['integer', 'exists:erp_boms,id'],
+        ]);
+
+        $deleted  = 0;
+        $blocked  = 0;
+        Bom::query()
+            ->whereKey($validated['record_ids'])
+            ->chunkById(200, function ($boms) use (&$deleted, &$blocked): void {
+                foreach ($boms as $bom) {
+                    if ($bom->workOrders()->whereNotIn('status', ['cancelled'])->exists()) {
+                        $blocked++;
+                        continue;
+                    }
+                    $bom->delete();
+                    $deleted++;
+                }
+            });
+
+        $msg = trans_choice('{0} Hiçbiri silinemedi.|{1} :count BOM silindi.|[2,*] :count BOM silindi.', $deleted, ['count' => $deleted]);
+        if ($blocked > 0) {
+            $msg .= ' '.__(':count tanesi aktif iş emri olduğu için atlandı.', ['count' => $blocked]);
+        }
+
+        return back()->with('erp_status', $msg);
     }
 }

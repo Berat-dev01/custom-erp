@@ -4,9 +4,7 @@
 @section('page-title', $invoice->invoice_number)
 
 @section('content')
-    @if(session('success'))
-        <x-admin-panel::alert type="success" dismissible>{{ session('success') }}</x-admin-panel::alert>
-    @endif
+    @include('erp::admin.partials.status')
 
     <div class="d-flex gap-2 mb-3 flex-wrap">
         @if($invoice->status === 'draft')

@@ -9,7 +9,11 @@ use App\Erp\Models\PurchaseOrder;
 use App\Erp\Models\PurchaseOrderItem;
 use App\Erp\Models\Supplier;
 use App\Erp\Models\Warehouse;
+use App\Erp\Services\Procurement\PurchaseOrderQuery;
 use App\Erp\Services\Procurement\PurchaseOrderService;
+use App\Erp\Support\ErpExportSchema;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
@@ -17,34 +21,22 @@ use Illuminate\Support\Facades\Gate;
 
 class PurchaseOrdersController extends Controller
 {
-    public function __construct(private readonly PurchaseOrderService $service) {}
+    public function __construct(
+        private readonly PurchaseOrderService $service,
+        private readonly PurchaseOrderQuery $query,
+    ) {}
 
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         Gate::authorize('viewAny', PurchaseOrder::class);
 
-        $query = PurchaseOrder::query()->with(['supplier', 'warehouse']);
-
-        if ($status = $request->input('status')) {
-            $query->where('status', $status);
-        }
-
-        if ($supplierId = $request->input('supplier_id')) {
-            $query->where('supplier_id', $supplierId);
-        }
-
-        if ($from = $request->input('date_from')) {
-            $query->whereDate('order_date', '>=', $from);
-        }
-
-        if ($to = $request->input('date_to')) {
-            $query->whereDate('order_date', '<=', $to);
-        }
-
-        $orders    = $query->latest()->paginate(20)->withQueryString();
-        $suppliers = Supplier::where('status', 'active')->orderBy('name')->get();
-
-        return view('erp::admin.purchase-orders.index', compact('orders', 'suppliers'));
+        return view('erp::admin.purchase-orders.index', [
+            'orders'        => $this->query->paginate($request),
+            'filters'       => $this->query->filters($request),
+            'suppliers'     => Supplier::query()->where('status', 'active')->orderBy('name')->pluck('name', 'id'),
+            'exportColumns' => ErpExportSchema::columns('purchase-orders'),
+            'exportFormats' => ErpExportSchema::formats('purchase-orders'),
+        ]);
     }
 
     public function create()
@@ -98,7 +90,7 @@ class PurchaseOrdersController extends Controller
         });
 
         return redirect()->route('erp.purchase-orders.show', $po)
-            ->with('success', __('Satın alma siparişi oluşturuldu.'));
+            ->with('erp_status', __('Satın alma siparişi oluşturuldu.'));
     }
 
     public function show(PurchaseOrder $purchaseOrder)
@@ -117,7 +109,7 @@ class PurchaseOrdersController extends Controller
         $purchaseOrder->delete();
 
         return redirect()->route('erp.purchase-orders.index')
-            ->with('success', __('Sipariş silindi.'));
+            ->with('erp_status', __('Sipariş silindi.'));
     }
 
     public function approve(PurchaseOrder $purchaseOrder)
@@ -127,7 +119,7 @@ class PurchaseOrdersController extends Controller
         $this->service->approvePurchaseOrder($purchaseOrder);
 
         return redirect()->route('erp.purchase-orders.show', $purchaseOrder)
-            ->with('success', __('Sipariş gönderildi olarak işaretlendi.'));
+            ->with('erp_status', __('Sipariş gönderildi olarak işaretlendi.'));
     }
 
     public function receive(PurchaseOrder $purchaseOrder)
@@ -139,11 +131,36 @@ class PurchaseOrdersController extends Controller
         return view('erp::admin.purchase-orders.receive', compact('purchaseOrder'));
     }
 
-    public function storeReceiving(ReceivePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder)
+    public function storeReceiving(ReceivePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder): RedirectResponse
     {
         $this->service->receiveItems($purchaseOrder, $request->validated()['items'] ?? []);
 
         return redirect()->route('erp.purchase-orders.show', $purchaseOrder)
-            ->with('success', __('Teslimat kaydedildi, stok güncellendi.'));
+            ->with('erp_status', __('Teslimat kaydedildi, stok güncellendi.'));
+    }
+
+    public function bulkDelete(Request $request): RedirectResponse
+    {
+        Gate::authorize('erp.purchase-orders.delete');
+
+        $validated = $request->validate([
+            'record_ids'   => ['required', 'array', 'min:1', 'max:500'],
+            'record_ids.*' => ['integer', 'exists:erp_purchase_orders,id'],
+        ]);
+
+        $deleted = 0;
+        PurchaseOrder::query()
+            ->whereKey($validated['record_ids'])
+            ->chunkById(200, function ($orders) use (&$deleted): void {
+                foreach ($orders as $order) {
+                    $order->delete();
+                    $deleted++;
+                }
+            });
+
+        return back()->with('erp_status', trans_choice(
+            '{0} Hiçbiri silinemedi.|{1} :count sipariş silindi.|[2,*] :count sipariş silindi.',
+            $deleted, ['count' => $deleted]
+        ));
     }
 }

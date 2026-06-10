@@ -18,7 +18,7 @@ class ProjectTasksController extends Controller
 
         $project->tasks()->create($request->validated());
 
-        return back()->with('success', __('Görev eklendi.'));
+        return back()->with('erp_status', __('Görev eklendi.'));
     }
 
     public function update(StoreProjectTaskRequest $request, Project $project, ProjectTask $task)
@@ -34,7 +34,7 @@ class ProjectTasksController extends Controller
 
         $task->update($data);
 
-        return back()->with('success', __('Görev güncellendi.'));
+        return back()->with('erp_status', __('Görev güncellendi.'));
     }
 
     public function updateStatus(Request $request, Project $project, ProjectTask $task)
@@ -53,7 +53,7 @@ class ProjectTasksController extends Controller
             return response()->json(['ok' => true, 'status' => $task->fresh()->status]);
         }
 
-        return back()->with('success', __('Görev durumu güncellendi.'));
+        return back()->with('erp_status', __('Görev durumu güncellendi.'));
     }
 
     public function destroy(Project $project, ProjectTask $task)
@@ -62,6 +62,6 @@ class ProjectTasksController extends Controller
 
         $task->delete();
 
-        return back()->with('success', __('Görev silindi.'));
+        return back()->with('erp_status', __('Görev silindi.'));
     }
 }

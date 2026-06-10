@@ -101,7 +101,7 @@ class JournalEntriesController extends Controller
         }
 
         return redirect()->route('erp.journal-entries.index')
-            ->with('success', __('Yevmiye fişi oluşturuldu.'));
+            ->with('erp_status', __('Yevmiye fişi oluşturuldu.'));
     }
 
     public function show(JournalEntry $journalEntry)

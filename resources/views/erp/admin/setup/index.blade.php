@@ -6,9 +6,7 @@
 @section('content')
     @php $currentStep = session('step', 1); @endphp
 
-    @if(session('success'))
-        <x-admin-panel::alert type="success" dismissible>{{ session('success') }}</x-admin-panel::alert>
-    @endif
+    @include('erp::admin.partials.status')
 
     {{-- Adım göstergesi --}}
     <div class="d-flex align-items-center mb-4 gap-3">

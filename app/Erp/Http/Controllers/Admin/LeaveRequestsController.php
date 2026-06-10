@@ -5,7 +5,10 @@ namespace App\Erp\Http\Controllers\Admin;
 use App\Erp\Models\Employee;
 use App\Erp\Models\LeaveRequest;
 use App\Erp\Models\LeaveType;
+use App\Erp\Services\HR\LeaveRequestQuery;
 use App\Erp\Services\HR\LeaveService;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Carbon;
@@ -13,24 +16,22 @@ use Illuminate\Support\Facades\Gate;
 
 class LeaveRequestsController extends Controller
 {
-    public function __construct(private LeaveService $leaveService) {}
+    public function __construct(
+        private LeaveService $leaveService,
+        private LeaveRequestQuery $query,
+    ) {}
 
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         Gate::authorize('erp.leave.view');
 
-        $query = LeaveRequest::with(['employee.department', 'leaveType'])
-            ->when($request->get('status'),      fn ($q, $v) => $q->where('status', $v))
-            ->when($request->get('employee_id'), fn ($q, $v) => $q->where('employee_id', $v))
-            ->when($request->get('leave_type_id'), fn ($q, $v) => $q->where('leave_type_id', $v))
-            ->latest();
-
-        $requests    = $query->paginate(25)->withQueryString();
-        $employees   = Employee::where('status', 'active')->orderBy('last_name')->get();
-        $leaveTypes  = LeaveType::where('is_active', true)->orderBy('name')->get();
-        $pendingCount = LeaveRequest::where('status', 'pending')->count();
-
-        return view('erp::admin.leave-requests.index', compact('requests', 'employees', 'leaveTypes', 'pendingCount'));
+        return view('erp::admin.leave-requests.index', [
+            'requests'     => $this->query->paginate($request),
+            'filters'      => $this->query->filters($request),
+            'employees'    => Employee::query()->where('status', 'active')->orderBy('last_name')->get(['id', 'first_name', 'last_name']),
+            'leaveTypes'   => LeaveType::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'),
+            'pendingCount' => LeaveRequest::where('status', 'pending')->count(),
+        ]);
     }
 
     public function create()
@@ -79,7 +80,7 @@ class LeaveRequestsController extends Controller
             ->notifyLeaveRequest($leaveRequest->load('employee'), 'submitted');
 
         return redirect()->route('erp.leave-requests.index')
-            ->with('success', __('İzin talebi oluşturuldu.'));
+            ->with('erp_status', __('İzin talebi oluşturuldu.'));
     }
 
     public function approve(Request $request, LeaveRequest $leaveRequest)
@@ -93,7 +94,7 @@ class LeaveRequestsController extends Controller
 
         $this->leaveService->approveLeaveRequest($leaveRequest, $approver);
 
-        return back()->with('success', __('İzin talebi onaylandı.'));
+        return back()->with('erp_status', __('İzin talebi onaylandı.'));
     }
 
     public function reject(Request $request, LeaveRequest $leaveRequest)
@@ -111,7 +112,7 @@ class LeaveRequestsController extends Controller
 
         $this->leaveService->rejectLeaveRequest($leaveRequest, $approver, $data['rejection_reason'] ?? '');
 
-        return back()->with('success', __('İzin talebi reddedildi.'));
+        return back()->with('erp_status', __('İzin talebi reddedildi.'));
     }
 
     public function cancel(LeaveRequest $leaveRequest)
@@ -122,6 +123,6 @@ class LeaveRequestsController extends Controller
 
         $leaveRequest->update(['status' => 'cancelled']);
 
-        return back()->with('success', __('İzin talebi iptal edildi.'));
+        return back()->with('erp_status', __('İzin talebi iptal edildi.'));
     }
 }

@@ -65,7 +65,7 @@ class ChecksController extends Controller
         ]);
 
         return redirect()->route('erp.checks.index')
-            ->with('success', __('Çek/senet kaydedildi.'));
+            ->with('erp_status', __('Çek/senet kaydedildi.'));
     }
 
     public function updateStatus(Request $request, Check $check)
@@ -78,7 +78,7 @@ class ChecksController extends Controller
 
         $check->update($data);
 
-        return back()->with('success', __('Durum güncellendi.'));
+        return back()->with('erp_status', __('Durum güncellendi.'));
     }
 
     public function destroy(Check $check)
@@ -89,6 +89,6 @@ class ChecksController extends Controller
 
         $check->delete();
 
-        return back()->with('success', __('Çek/senet silindi.'));
+        return back()->with('erp_status', __('Çek/senet silindi.'));
     }
 }

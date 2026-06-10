@@ -58,7 +58,7 @@ class BankAccountsController extends Controller
         BankAccount::create($data);
 
         return redirect()->route('erp.bank-accounts.index')
-            ->with('success', __('Banka hesabı oluşturuldu.'));
+            ->with('erp_status', __('Banka hesabı oluşturuldu.'));
     }
 
     public function show(Request $request, BankAccount $bankAccount)
@@ -99,7 +99,7 @@ class BankAccountsController extends Controller
             'created_by'      => $request->user()->id,
         ]);
 
-        return back()->with('success', __('İşlem kaydedildi.'));
+        return back()->with('erp_status', __('İşlem kaydedildi.'));
     }
 
     public function transfer(Request $request, BankAccount $bankAccount)
@@ -124,7 +124,7 @@ class BankAccountsController extends Controller
             $request->user()->id
         );
 
-        return back()->with('success', __('Transfer başarılı.'));
+        return back()->with('erp_status', __('Transfer başarılı.'));
     }
 
     public function reconcile(Request $request, BankAccount $bankAccount)
@@ -135,7 +135,7 @@ class BankAccountsController extends Controller
 
         $count = $this->bankService->reconcile($bankAccount, $ids);
 
-        return back()->with('success', __(':count işlem mutabık sayıldı.', ['count' => $count]));
+        return back()->with('erp_status', __(':count işlem mutabık sayıldı.', ['count' => $count]));
     }
 
     public function importStatement(Request $request, BankAccount $bankAccount)
@@ -146,6 +146,6 @@ class BankAccountsController extends Controller
 
         $result = $this->bankService->importStatement($bankAccount, $request->file('file'), $request->user()->id);
 
-        return back()->with('success', __(':imported işlem içe aktarıldı, :skipped atlandı.', $result));
+        return back()->with('erp_status', __(':imported işlem içe aktarıldı, :skipped atlandı.', $result));
     }
 }

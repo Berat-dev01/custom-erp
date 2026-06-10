@@ -4,9 +4,7 @@
 @section('page-title', __('Çek/Senet Portföyü'))
 
 @section('content')
-    @if(session('success'))
-        <x-admin-panel::alert type="success" dismissible>{{ session('success') }}</x-admin-panel::alert>
-    @endif
+    @include('erp::admin.partials.status')
 
     @if($dueSoon > 0)
         <x-admin-panel::alert type="warning" dismissible class="mb-3">

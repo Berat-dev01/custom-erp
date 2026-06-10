@@ -8,55 +8,48 @@ use App\Erp\Http\Requests\UpdateProjectRequest;
 use App\Erp\Models\Customer;
 use App\Erp\Models\Employee;
 use App\Erp\Models\Project;
-use App\Erp\Models\TimeEntry;
+use App\Erp\Services\Projects\ProjectQuery;
+use App\Erp\Support\ErpExportSchema;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
 
 class ProjectsController extends Controller
 {
-    public function index(Request $request)
+    public function __construct(private readonly ProjectQuery $query) {}
+
+    public function index(Request $request): View
     {
         Gate::authorize('viewAny', Project::class);
 
-        $query = Project::query()->with(['customer', 'manager'])
-            ->withCount('tasks');
-
-        if ($status = $request->input('status')) {
-            $query->where('status', $status);
-        }
-
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%");
-            });
-        }
-
-        $projects = $query->latest()->paginate(20)->withQueryString();
-
-        return view('erp::admin.projects.index', compact('projects'));
+        return view('erp::admin.projects.index', [
+            'projects'      => $this->query->paginate($request),
+            'filters'       => $this->query->filters($request),
+            'customers'     => Customer::query()->where('status', 'active')->orderBy('name')->pluck('name', 'id'),
+            'exportColumns' => ErpExportSchema::columns('projects'),
+            'exportFormats' => ErpExportSchema::formats('projects'),
+        ]);
     }
 
-    public function create()
+    public function create(): View
     {
         Gate::authorize('create', Project::class);
 
-        $customers = Customer::where('status', 'active')->orderBy('name')->get();
-        $managers  = Employee::where('status', 'active')->orderBy('first_name')->get();
-
-        return view('erp::admin.projects.create', compact('customers', 'managers'));
+        return view('erp::admin.projects.form', $this->formData(new Project));
     }
 
-    public function store(StoreProjectRequest $request)
+    public function store(StoreProjectRequest $request): RedirectResponse
     {
-        Project::create($request->validated());
+        $project = Project::create($request->validated());
 
-        return redirect()->route('erp.projects.index')
-            ->with('success', __('Proje oluşturuldu.'));
+        return redirect()
+            ->route('erp.projects.show', $project)
+            ->with('erp_status', __('Proje oluşturuldu.'));
     }
 
-    public function show(Project $project)
+    public function show(Project $project): View
     {
         Gate::authorize('view', $project);
 
@@ -77,38 +70,72 @@ class ProjectsController extends Controller
         ));
     }
 
-    public function edit(Project $project)
+    public function edit(Project $project): View
     {
         Gate::authorize('update', $project);
 
-        $customers = Customer::where('status', 'active')->orderBy('name')->get();
-        $managers  = Employee::where('status', 'active')->orderBy('first_name')->get();
-
-        return view('erp::admin.projects.edit', compact('project', 'customers', 'managers'));
+        return view('erp::admin.projects.form', $this->formData($project));
     }
 
-    public function update(UpdateProjectRequest $request, Project $project)
+    public function update(UpdateProjectRequest $request, Project $project): RedirectResponse
     {
         $project->update($request->validated());
 
-        return redirect()->route('erp.projects.show', $project)
-            ->with('success', __('Proje güncellendi.'));
+        return redirect()
+            ->route('erp.projects.show', $project)
+            ->with('erp_status', __('Proje güncellendi.'));
     }
 
-    public function destroy(Project $project)
+    public function destroy(Project $project): RedirectResponse
     {
         Gate::authorize('delete', $project);
 
         $project->delete();
 
-        return redirect()->route('erp.projects.index')
-            ->with('success', __('Proje silindi.'));
+        return redirect()
+            ->route('erp.projects.index')
+            ->with('erp_status', __('Proje silindi.'));
     }
 
-    public function storeTimeEntry(StoreTimeEntryRequest $request, Project $project)
+    public function bulkDelete(Request $request): RedirectResponse
+    {
+        Gate::authorize('erp.projects.delete');
+
+        $validated = $request->validate([
+            'record_ids'   => ['required', 'array', 'min:1', 'max:500'],
+            'record_ids.*' => ['integer', 'exists:erp_projects,id'],
+        ]);
+
+        $deleted = 0;
+        Project::query()
+            ->whereKey($validated['record_ids'])
+            ->chunkById(200, function ($projects) use (&$deleted): void {
+                foreach ($projects as $project) {
+                    $project->delete();
+                    $deleted++;
+                }
+            });
+
+        return back()->with('erp_status', trans_choice(
+            '{0} Hiçbiri silinemedi.|{1} :count proje silindi.|[2,*] :count proje silindi.',
+            $deleted, ['count' => $deleted]
+        ));
+    }
+
+    public function storeTimeEntry(StoreTimeEntryRequest $request, Project $project): RedirectResponse
     {
         $project->timeEntries()->create($request->validated());
 
-        return back()->with('success', __('Zaman girişi eklendi.'));
+        return back()->with('erp_status', __('Zaman girişi eklendi.'));
+    }
+
+    /** @return array<string, mixed> */
+    private function formData(Project $project): array
+    {
+        return [
+            'project'   => $project,
+            'customers' => Customer::query()->where('status', 'active')->orderBy('name')->pluck('name', 'id'),
+            'managers'  => Employee::query()->where('status', 'active')->orderBy('first_name')->get(['id', 'first_name', 'last_name']),
+        ];
     }
 }

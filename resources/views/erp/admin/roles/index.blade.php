@@ -4,9 +4,7 @@
 @section('page-title', __('Rol Yönetimi'))
 
 @section('content')
-    @if(session('success'))
-        <x-admin-panel::alert type="success" dismissible>{{ session('success') }}</x-admin-panel::alert>
-    @endif
+    @include('erp::admin.partials.status')
 
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <x-admin-panel::button href="{{ route('erp.roles.users') }}" variant="outline" icon="users">{{ __('Kullanıcı Rolleri') }}</x-admin-panel::button>

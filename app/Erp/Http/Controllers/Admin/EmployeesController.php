@@ -7,107 +7,116 @@ use App\Erp\Http\Requests\UpdateEmployeeRequest;
 use App\Erp\Models\Department;
 use App\Erp\Models\Employee;
 use App\Erp\Models\Position;
+use App\Erp\Services\Employees\EmployeeQuery;
+use App\Erp\Support\ErpExportSchema;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
 
 class EmployeesController extends Controller
 {
-    public function index(Request $request)
+    public function __construct(private readonly EmployeeQuery $employees) {}
+
+    public function index(Request $request): View
     {
         Gate::authorize('viewAny', Employee::class);
 
-        $query = Employee::query()->with(['department', 'position']);
-
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('employee_number', 'like', "%{$search}%");
-            });
-        }
-
-        if ($departmentId = $request->input('department_id')) {
-            $query->where('department_id', $departmentId);
-        }
-
-        if ($status = $request->input('status')) {
-            $query->where('status', $status);
-        }
-
-        $employees   = $query->latest()->paginate(20)->withQueryString();
-        $departments = Department::where('is_active', true)->orderBy('name')->get();
-
-        return view('erp::admin.employees.index', compact('employees', 'departments'));
+        return view('erp::admin.employees.index', [
+            'employees'     => $this->employees->paginate($request),
+            'filters'       => $this->employees->filters($request),
+            'departments'   => Department::query()->orderBy('name')->pluck('name', 'id'),
+            'exportColumns' => ErpExportSchema::columns('employees'),
+            'exportFormats' => ErpExportSchema::formats('employees'),
+        ]);
     }
 
-    public function create()
+    public function create(): View
     {
         Gate::authorize('create', Employee::class);
 
-        $departments = Department::where('is_active', true)->orderBy('name')->get();
-        $positions   = Position::where('is_active', true)->orderBy('name')->get();
-        $managers    = Employee::where('status', 'active')->orderBy('first_name')->get();
-
-        return view('erp::admin.employees.create', compact('departments', 'positions', 'managers'));
+        return view('erp::admin.employees.form', $this->formData(new Employee));
     }
 
-    public function store(StoreEmployeeRequest $request)
+    public function store(StoreEmployeeRequest $request): RedirectResponse
     {
-        $data = $request->validated();
-        $data['employee_number'] = $this->generateEmployeeNumber();
+        $employee = Employee::create($request->validated());
 
-        Employee::create($data);
-
-        return redirect()->route('erp.employees.index')
-            ->with('success', __('Çalışan başarıyla eklendi.'));
+        return redirect()
+            ->route('erp.employees.show', $employee)
+            ->with('erp_status', __('Çalışan eklendi.'));
     }
 
-    public function show(Employee $employee)
+    public function show(Employee $employee): View
     {
         Gate::authorize('view', $employee);
 
-        $employee->load(['department', 'position', 'manager', 'documents']);
+        $employee->load(['department', 'position', 'manager', 'documents', 'salaries']);
 
         return view('erp::admin.employees.show', compact('employee'));
     }
 
-    public function edit(Employee $employee)
+    public function edit(Employee $employee): View
     {
         Gate::authorize('update', $employee);
 
-        $departments = Department::where('is_active', true)->orderBy('name')->get();
-        $positions   = Position::where('is_active', true)->orderBy('name')->get();
-        $managers    = Employee::where('status', 'active')
-            ->where('id', '!=', $employee->id)
-            ->orderBy('first_name')->get();
-
-        return view('erp::admin.employees.edit', compact('employee', 'departments', 'positions', 'managers'));
+        return view('erp::admin.employees.form', $this->formData($employee));
     }
 
-    public function update(UpdateEmployeeRequest $request, Employee $employee)
+    public function update(UpdateEmployeeRequest $request, Employee $employee): RedirectResponse
     {
         $employee->update($request->validated());
 
-        return redirect()->route('erp.employees.show', $employee)
-            ->with('success', __('Çalışan güncellendi.'));
+        return redirect()
+            ->route('erp.employees.show', $employee)
+            ->with('erp_status', __('Çalışan güncellendi.'));
     }
 
-    public function destroy(Employee $employee)
+    public function destroy(Employee $employee): RedirectResponse
     {
         Gate::authorize('delete', $employee);
 
         $employee->delete();
 
-        return redirect()->route('erp.employees.index')
-            ->with('success', __('Çalışan silindi.'));
+        return redirect()
+            ->route('erp.employees.index')
+            ->with('erp_status', __('Çalışan silindi.'));
     }
 
-    private function generateEmployeeNumber(): string
+    public function bulkDelete(Request $request): RedirectResponse
     {
-        $last = Employee::withTrashed()->max('id') ?? 0;
+        Gate::authorize('erp.employees.delete');
 
-        return 'EMP-' . str_pad($last + 1, 5, '0', STR_PAD_LEFT);
+        $validated = $request->validate([
+            'record_ids'   => ['required', 'array', 'min:1', 'max:500'],
+            'record_ids.*' => ['integer', 'exists:erp_employees,id'],
+        ]);
+
+        $deleted = 0;
+        Employee::query()
+            ->whereKey($validated['record_ids'])
+            ->chunkById(200, function ($employees) use (&$deleted): void {
+                foreach ($employees as $employee) {
+                    $employee->delete();
+                    $deleted++;
+                }
+            });
+
+        return back()->with('erp_status', trans_choice(
+            '{0} Hiçbiri silinemedi.|{1} :count çalışan silindi.|[2,*] :count çalışan silindi.',
+            $deleted, ['count' => $deleted]
+        ));
+    }
+
+    /** @return array<string, mixed> */
+    private function formData(Employee $employee): array
+    {
+        return [
+            'employee'    => $employee,
+            'departments' => Department::query()->orderBy('name')->pluck('name', 'id'),
+            'positions'   => Position::query()->orderBy('title')->pluck('title', 'id'),
+            'managers'    => Employee::query()->orderBy('last_name')->get(['id', 'first_name', 'last_name']),
+        ];
     }
 }

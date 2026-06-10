@@ -8,66 +8,55 @@ use App\Erp\Models\Asset;
 use App\Erp\Models\AssetCategory;
 use App\Erp\Models\Employee;
 use App\Erp\Models\Warehouse;
+use App\Erp\Services\Assets\AssetQuery;
 use App\Erp\Services\Assets\DepreciationService;
+use App\Erp\Support\ErpExportSchema;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Gate;
 
 class AssetsController extends Controller
 {
-    public function __construct(private readonly DepreciationService $depreciationService) {}
+    public function __construct(
+        private readonly AssetQuery $query,
+        private readonly DepreciationService $depreciationService,
+    ) {}
 
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         Gate::authorize('viewAny', Asset::class);
 
-        $query = Asset::query()->with(['category', 'assignedTo']);
-
-        if ($status = $request->input('status')) {
-            $query->where('status', $status);
-        }
-
-        if ($categoryId = $request->input('category_id')) {
-            $query->where('category_id', $categoryId);
-        }
-
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('asset_code', 'like', "%{$search}%")
-                  ->orWhere('serial_number', 'like', "%{$search}%");
-            });
-        }
-
-        $assets     = $query->latest()->paginate(20)->withQueryString();
-        $categories = AssetCategory::orderBy('name')->get();
-
-        return view('erp::admin.assets.index', compact('assets', 'categories'));
+        return view('erp::admin.assets.index', [
+            'assets'        => $this->query->paginate($request),
+            'filters'       => $this->query->filters($request),
+            'categories'    => AssetCategory::query()->orderBy('name')->pluck('name', 'id'),
+            'exportColumns' => ErpExportSchema::columns('assets'),
+            'exportFormats' => ErpExportSchema::formats('assets'),
+        ]);
     }
 
-    public function create()
+    public function create(): View
     {
         Gate::authorize('create', Asset::class);
 
-        $categories = AssetCategory::orderBy('name')->get();
-        $employees  = Employee::where('status', 'active')->orderBy('first_name')->get();
-        $warehouses = Warehouse::where('is_active', true)->orderBy('name')->get();
-
-        return view('erp::admin.assets.create', compact('categories', 'employees', 'warehouses'));
+        return view('erp::admin.assets.form', $this->formData(new Asset));
     }
 
-    public function store(StoreAssetRequest $request)
+    public function store(StoreAssetRequest $request): RedirectResponse
     {
         $data = $request->validated();
         $data['current_value'] = $data['current_value'] ?? $data['purchase_price'];
 
-        Asset::create($data);
+        $asset = Asset::create($data);
 
-        return redirect()->route('erp.assets.index')
-            ->with('success', __('Varlık eklendi.'));
+        return redirect()
+            ->route('erp.assets.show', $asset)
+            ->with('erp_status', __('Varlık eklendi.'));
     }
 
-    public function show(Asset $asset)
+    public function show(Asset $asset): View
     {
         Gate::authorize('view', $asset);
 
@@ -81,45 +70,79 @@ class AssetsController extends Controller
         return view('erp::admin.assets.show', compact('asset', 'depreciationHistory'));
     }
 
-    public function edit(Asset $asset)
+    public function edit(Asset $asset): View
     {
         Gate::authorize('update', $asset);
 
-        $categories = AssetCategory::orderBy('name')->get();
-        $employees  = Employee::where('status', 'active')->orderBy('first_name')->get();
-        $warehouses = Warehouse::where('is_active', true)->orderBy('name')->get();
-
-        return view('erp::admin.assets.edit', compact('asset', 'categories', 'employees', 'warehouses'));
+        return view('erp::admin.assets.form', $this->formData($asset));
     }
 
-    public function update(UpdateAssetRequest $request, Asset $asset)
+    public function update(UpdateAssetRequest $request, Asset $asset): RedirectResponse
     {
         $asset->update($request->validated());
 
-        return redirect()->route('erp.assets.show', $asset)
-            ->with('success', __('Varlık güncellendi.'));
+        return redirect()
+            ->route('erp.assets.show', $asset)
+            ->with('erp_status', __('Varlık güncellendi.'));
     }
 
-    public function destroy(Asset $asset)
+    public function destroy(Asset $asset): RedirectResponse
     {
         Gate::authorize('delete', $asset);
 
         $asset->delete();
 
-        return redirect()->route('erp.assets.index')
-            ->with('success', __('Varlık silindi.'));
+        return redirect()
+            ->route('erp.assets.index')
+            ->with('erp_status', __('Varlık silindi.'));
     }
 
-    public function depreciate(Asset $asset)
+    public function bulkDelete(Request $request): RedirectResponse
+    {
+        Gate::authorize('erp.assets.delete');
+
+        $validated = $request->validate([
+            'record_ids'   => ['required', 'array', 'min:1', 'max:500'],
+            'record_ids.*' => ['integer', 'exists:erp_assets,id'],
+        ]);
+
+        $deleted = 0;
+        Asset::query()
+            ->whereKey($validated['record_ids'])
+            ->chunkById(200, function ($assets) use (&$deleted): void {
+                foreach ($assets as $asset) {
+                    $asset->delete();
+                    $deleted++;
+                }
+            });
+
+        return back()->with('erp_status', trans_choice(
+            '{0} Hiçbiri silinemedi.|{1} :count varlık silindi.|[2,*] :count varlık silindi.',
+            $deleted, ['count' => $deleted]
+        ));
+    }
+
+    public function depreciate(Asset $asset): RedirectResponse
     {
         Gate::authorize('update', $asset);
 
         $entry = $this->depreciationService->depreciateAsset($asset, now()->year, now()->month);
 
         if (! $entry) {
-            return back()->with('error', __('Bu varlık için amortisman hesaplanamadı (defter değeri 0 veya zaten işlendi).'));
+            return back()->with('erp_status', __('Bu varlık için amortisman hesaplanamadı (defter değeri 0 veya zaten işlendi).'));
         }
 
-        return back()->with('success', __('Amortisman kaydedildi: :amount', ['amount' => number_format($entry->amount, 2) . ' TL']));
+        return back()->with('erp_status', __('Amortisman kaydedildi: :amount', ['amount' => number_format($entry->amount, 2).' TL']));
+    }
+
+    /** @return array<string, mixed> */
+    private function formData(Asset $asset): array
+    {
+        return [
+            'asset'      => $asset,
+            'categories' => AssetCategory::query()->orderBy('name')->pluck('name', 'id'),
+            'employees'  => Employee::query()->where('status', 'active')->orderBy('first_name')->get(['id', 'first_name', 'last_name']),
+            'warehouses' => Warehouse::query()->orderBy('name')->pluck('name', 'id'),
+        ];
     }
 }

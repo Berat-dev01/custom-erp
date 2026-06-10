@@ -4,9 +4,7 @@
 @section('page-title', __('Para Birimleri & Kurlar'))
 
 @section('content')
-    @if(session('success'))
-        <x-admin-panel::alert type="success" dismissible>{{ session('success') }}</x-admin-panel::alert>
-    @endif
+    @include('erp::admin.partials.status')
 
     <div class="row g-3">
         {{-- Sol: Para Birimleri + Kur Tablosu --}}

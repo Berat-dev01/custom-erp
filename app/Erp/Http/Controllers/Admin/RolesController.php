@@ -51,7 +51,7 @@ class RolesController extends Controller
         $role = Role::create(['name' => $data['name'], 'guard_name' => $this->catalog->guardName()]);
         $role->syncPermissions($data['permissions'] ?? []);
 
-        return redirect()->route('erp.roles.index')->with('success', __('Rol oluşturuldu.'));
+        return redirect()->route('erp.roles.index')->with('erp_status', __('Rol oluşturuldu.'));
     }
 
     public function edit(Role $role)
@@ -75,7 +75,7 @@ class RolesController extends Controller
 
         $role->syncPermissions($data['permissions'] ?? []);
 
-        return redirect()->route('erp.roles.index')->with('success', __('Rol güncellendi.'));
+        return redirect()->route('erp.roles.index')->with('erp_status', __('Rol güncellendi.'));
     }
 
     public function destroy(Role $role)
@@ -86,7 +86,7 @@ class RolesController extends Controller
 
         $role->delete();
 
-        return redirect()->route('erp.roles.index')->with('success', __('Rol silindi.'));
+        return redirect()->route('erp.roles.index')->with('erp_status', __('Rol silindi.'));
     }
 
     public function users()
@@ -111,7 +111,7 @@ class RolesController extends Controller
         $role = Role::findByName($data['role'], $this->catalog->guardName());
         $user->assignRole($role);
 
-        return back()->with('success', __('Rol atandı.'));
+        return back()->with('erp_status', __('Rol atandı.'));
     }
 
     public function removeRole(Request $request, User $user)
@@ -125,7 +125,7 @@ class RolesController extends Controller
         $role = Role::findByName($data['role'], $this->catalog->guardName());
         $user->removeRole($role);
 
-        return back()->with('success', __('Rol kaldırıldı.'));
+        return back()->with('erp_status', __('Rol kaldırıldı.'));
     }
 
     private function groupedPermissions(): array

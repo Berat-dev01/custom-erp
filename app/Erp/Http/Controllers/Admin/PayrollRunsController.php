@@ -43,7 +43,7 @@ class PayrollRunsController extends Controller
         );
 
         return redirect()->route('erp.payroll-runs.show', $run)
-            ->with('success', __('Bordro hesaplandı.'));
+            ->with('erp_status', __('Bordro hesaplandı.'));
     }
 
     public function show(PayrollRun $payrollRun)
@@ -64,7 +64,7 @@ class PayrollRunsController extends Controller
         $this->service->approveAndPay($payrollRun, Carbon::today());
 
         return redirect()->route('erp.payroll-runs.show', $payrollRun)
-            ->with('success', __('Bordro onaylandı ve ödenmiş olarak işaretlendi.'));
+            ->with('erp_status', __('Bordro onaylandı ve ödenmiş olarak işaretlendi.'));
     }
 
     // Çalışan maaş tanımlama
@@ -94,7 +94,7 @@ class PayrollRunsController extends Controller
         ]);
 
         return redirect()->route('erp.employees.show', $employee)
-            ->with('success', __('Maaş tanımı eklendi.'));
+            ->with('erp_status', __('Maaş tanımı eklendi.'));
     }
 
     public function exportSgkBildirgesi(PayrollRun $payrollRun)

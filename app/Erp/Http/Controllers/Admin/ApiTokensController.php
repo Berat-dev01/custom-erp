@@ -41,7 +41,7 @@ class ApiTokensController extends Controller
         ]);
 
         return back()->with('new_token', $plainText)
-                     ->with('success', __('API tokeni oluşturuldu. Bir daha gösterilmeyecek.'));
+                     ->with('erp_status', __('API tokeni oluşturuldu. Bir daha gösterilmeyecek.'));
     }
 
     public function destroy(Request $request, ErpApiToken $apiToken): RedirectResponse
@@ -52,6 +52,6 @@ class ApiTokensController extends Controller
 
         $apiToken->delete();
 
-        return back()->with('success', __('Token silindi.'));
+        return back()->with('erp_status', __('Token silindi.'));
     }
 }
