@@ -9,6 +9,10 @@
     min-height: 100vh;
     background-color: var(--bg-secondary);
 }
+.crm-admin-actions {
+    margin: 10px 0;
+    text-align: right;
+}
 
 /* ===== Sidebar ===== */
 .admin-sidebar {
